@@ -1,0 +1,58 @@
+/* Line Styles */
+.line {
+    fill: none;
+    opacity: 0.9;
+    /* transition: 0.3s; ease-in-out; (If you want to keep the transition, you might need a JS library or more complex CSS here) */
+}
+
+/* Data Points (Dots) */
+.dot {
+    stroke: #fff;
+    stroke-width: 1.5;
+}
+
+/* Axis and Gridline Styles */
+.domain {
+    stroke: #374151;
+    stroke-width: 1.5;
+}
+
+/* X-Axis Tick Lines */
+.x.axis .tick line {
+    stroke: #6b7280;
+    stroke-opacity: 0.7;
+}
+
+/* Y-Axis Grid Lines (Added for visibility, previously set in JS) */
+.y.axis .tick line {
+    stroke: #9ca3af;
+    stroke-opacity: 0.4;
+    stroke-dasharray: 2,2; /* Dotted line effect */
+}
+
+/* Axis Text */
+.axis text {
+    font-size: 0.875rem; /* Corresponds to text-sm */
+    fill: #4b5563; /* Corresponds to a dark gray color */
+}
+
+/* Y-Axis Label Text */
+.y-axis-label {
+    font-weight: 600; /* font-semibold */
+    font-size: 0.875rem; /* text-sm */
+    fill: currentColor;
+}
+
+/* End Labels */
+.label-annotation {
+    font-size: 10px;
+    font-weight: 600;
+}
+
+/* Legend Toggling Styles */
+.jurisdiction.hidden {
+    display: none;
+}
+.legend-item.opacity-40 {
+    opacity: 0.4;
+}
