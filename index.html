@@ -7,12 +7,14 @@
 	<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-	<!-- Nav Bar -->
-	<nav class="navbar">
+	<nav class="navbar" style="display: flex; align-items: center;">
+        <a href="index.html">
+            <img src="./assets/logo.png" alt="Website Logo" style="height: 70px; margin-right: 50px; margin-left: 20px;">
+        </a>
 		<ul class="nav-links">
 			<li><a href="index.html" class="active">Home</a></li>
 			<li><a href="#">Chart 1</a></li>
-			<li><a href="#">Chart 2</a></li>
+			<li><a href="chart2.html">Chart 2</a></li>
 			<li><a href="#">Chart 3</a></li>
 			<li><a href="#">Chart 4</a></li>
 			<li><a href="#">Chart 5</a></li>
@@ -20,7 +22,6 @@
 		</ul>
 	</nav>
 
-	<!-- Main Content -->
 	<section class="banner">
 		<div class="banner-overlay"></div>
 		<div class="banner-content">
@@ -30,7 +31,6 @@
 		</div>
 	</section>
 
-	<!-- About Section -->
 	<section class="about">
 		<h2>About This Website</h2>
 		<p>
@@ -41,13 +41,12 @@
 		</p>
 	</section>
 
-	<!-- Dashboard Section -->
 	<section class="dashboard">
 		<h2>Explore the Dashboard</h2>
 
 		<div class="chart-page-btn">
 			<a href="#" class="chart-btn">Chart 1 <span>&gt;</span></a>
-			<a href="#" class="chart-btn">Chart 2 <span>&gt;</span></a>
+			<a href="chart2.html" class="chart-btn">Chart 2 <span>&gt;</span></a>
 			<a href="#" class="chart-btn">Chart 3 <span>&gt;</span></a>
 			<a href="#" class="chart-btn">Chart 4 <span>&gt;</span></a>
 			<a href="#" class="chart-btn">Chart 5 <span>&gt;</span></a>
@@ -55,9 +54,9 @@
 		</div>
 	</section>
 
-	<!-- Footer -->
 	<footer class="footer">
 		<p>&copy; DV01_T05</p>
+		<p>Code/content generated with the assistance from GenAI</p>
 	</footer>
 </body>
 </html>
