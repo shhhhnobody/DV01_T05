@@ -3,8 +3,9 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chart 2 | Australian Speeding Offence Trends</title>
+    <title>Chart 1 | Australian Speeding Offence Trends</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/chart1.css">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
@@ -28,125 +29,6 @@
         }
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <style>
-        /* BASE STYLES TO MATCH SCREENSHOT */
-        body {
-            background-color: #f3f1ed; /* New light beige background */
-        }
-        .page-content-wrapper {
-            /* Reset wrapper styling to be closer to a full-page layout */
-            max-width: none;
-            margin: 0 auto; 
-            box-shadow: none; 
-            border-radius: 0;
-            padding: 0;
-            background-color: white; /* Main page background */
-        }
-        
-        /* The custom styles for .navbar and .nav-links were removed here to use the external css/style.css */
-
-        /* D3 Chart Specific Styles (Kept) */
-        .axis path, .axis line {
-            fill: none;
-            stroke: #d1d5db;
-            shape-rendering: crispEdges;
-        }
-        .line {
-            fill: none;
-            stroke-width: 3px;
-        }
-        .tooltip {
-            position: absolute;
-            text-align: center;
-            padding: 8px 12px;
-            background: rgba(0, 0, 0, 0.85);
-            color: white;
-            border: 0px;
-            border-radius: 8px;
-            pointer-events: none;
-            font-size: 0.8rem;
-        }
-        .legend-item {
-            cursor: pointer;
-            transition: opacity 0.2s ease-in-out;
-        }
-        
-        /* FILTER STYLES */
-        .pill-filter-bar {
-            padding-top: 0.25rem;
-            padding-bottom: 0.25rem;
-            padding-left: 1rem;
-            padding-right: 2.5rem; /* Space for the custom arrow */
-            border-radius: 9999px; 
-            font-size: 0.9rem;
-            width: auto; 
-            min-width: 150px; 
-            font-weight: 600; 
-            color: #333; 
-            border: 2px solid #396f7c !important; 
-            background-color: transparent !important; 
-            appearance: none; 
-            text-align: left; 
-            cursor: pointer;
-        }
-        
-        /* Custom arrow for select boxes - UPDATED FOR SIZE, COLOR, AND ALIGNMENT */
-        .select-wrapper {
-            position: relative;
-            display: inline-block;
-        }
-        .select-wrapper::after {
-            content: '⌄'; 
-            position: absolute;
-            top: 10%;
-            right: 10px;
-            /* Adjusted transform to visually center the large icon symbol better with the text */
-            transform: translateY(-40%); 
-            pointer-events: none;
-            font-size: 1.5rem; 
-            color: #004261; /* New icon color */
-        }
-
-        /* Reset button style update for the new position */
-        #reset-filters-button {
-            background-color: #396f7c;
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 9999px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            box-shadow: none; 
-        }
-
-        /* Styling for the Key Metrics / Notes Panel */
-        .key-metrics-panel {
-            min-width: 280px;
-            max-width: 300px;
-            padding: 1rem;
-            background-color: #F1F2F5; 
-        }
-        .metric-box {
-            background-color: #f7f7f7; 
-            padding: 0.75rem;
-            border-radius: 0.5rem;
-            margin-bottom: 1rem;
-            border: 1px solid #e0e0e0;
-        }
-
-        /* Specific styles for the two colored metric boxes */
-        .metric-box.police {
-            background-color: #233d7c; /* Requested color: Dark blue */
-            color: white;
-        }
-        .metric-box.camera {
-            background-color: #233d7c; /* Requested color: Dark blue */
-            color: white;
-        }
-        .metric-box.arrests-charges {
-            background-color: #656d72; /* Requested color: Dark grey */
-            color: white; /* Requested text color: White */
-        }
-    </style>
     
 </head>
 <body class="bg-screenshot-bg font-sans"> 
@@ -157,8 +39,8 @@
         </a>
 		<ul class="nav-links">
 			<li><a href="index.html">Home</a></li>
-			<li><a href="chart1.html">Chart 1</a></li>
-			<li><a href="chart2.html" class="active">Chart 2</a></li>
+			<li><a href="chart1.html" class="active">Chart 1</a></li>
+			<li><a href="chart2.html">Chart 2</a></li>
 			<li><a href="#">Chart 3</a></li>
 			<li><a href="#">Chart 4</a></li>
 			<li><a href="#">Chart 5</a></li>
@@ -168,6 +50,18 @@
 
     <div class="flex justify-center items-center py-4 bg-light-gray border-b border-gray-200 relative">
         <div class="flex items-center space-x-4">
+
+            <div class="select-wrapper">
+                <select id="age-filter" class="pill-filter-bar">
+                    <option value="">All Age Group (Default)</option>
+					<option value="0-16">0-16</option>
+					<option value="17-25">17-25</option>
+					<option value="26-39">26-39</option>
+					<option value="40-64">40-64</option>
+					<option value="65 and over">65 and over</option>
+					<option value="Unknown">Unknown</option>
+                </select>
+            </div>
             
             <div class="select-wrapper">
                 <select id="jurisdiction-filter" class="pill-filter-bar">
@@ -182,10 +76,22 @@
                     <option value="WA">WA</option>
                 </select>
             </div>
+
+            <div class="select-wrapper">
+                <select id="location-filter" class="pill-filter-bar">
+                    <option value="">All Location (Default)</option>
+					<option value="Inner Regional Australia">Inner Regional Australia</option>
+					<option value="Major Cities of Australia">Major Cities of Australia</option>
+					<option value="Outer Regional Australia">Outer Regional Australia</option>
+					<option value="Remote Australia">Remote Australia</option>
+					<option value="Very Remote Australia">Very Remote Australia</option>
+					<option value="Unknown">Unknown</option>
+                </select>
+            </div>
             
             <div class="select-wrapper">
                 <select id="offense-type-filter" class="pill-filter-bar">
-                    <option value="Fines" selected>Fines (Default)</option>
+                    <option value="Fines (log)" selected>Fines (Default)</option>
                     <option value="Arrests">Arrests</option>
                     <option value="Charges">Charges</option>
                 </select>
@@ -242,20 +148,7 @@
             <div class="max-h-40 overflow-y-auto pr-2">
                 <div class="space-y-3 text-sm text-gray-700">
                     <p>
-                        This chart visualizes annual trends for selected speeding offense types across Australian jurisdictions.
-                        Use the filters to narrow the scope of the analysis.
-                    </p>
-                    <p>
-                        **Default View:** Shows **Fines** data aggregated across **All Jurisdictions** for the selected year.
-                    </p>
-                    <p>
-                        *Placeholder note for testing scrollability.* Long text content simulates detailed explanatory notes that might exceed the available vertical space in the panel, ensuring the scroll bar appears as requested. This is vital for maintaining a clean layout without fixed-size panels stretching awkwardly.
-                    </p>
-                    <p>
-                        *Another placeholder note:* Data quality and reporting standards may vary significantly between different jurisdictions and over time. For specific state-based interpretations, refer to the original source material.
-                    </p>
-                    <p>
-                        *Final placeholder note:* The 'Fines' category includes penalties issued by police officers (traffic stops) and automated cameras (speed and red-light). The separation into 'Police fines' and 'Camera fines' aims to distinguish enforcement methods, although definitions can overlap or change.
+                        This chart visualizes ...
                     </p>
                 </div>
             </div>
@@ -263,14 +156,10 @@
 
         <div class="flex-1 p-8 bg-white">
             <h2 id="chart-title" class="text-2xl font-bold text-gray-800 mb-4 transition duration-300">
-                Annual Fines Trend Across All Jurisdictions (2008-2024)
+                Chart 1
             </h2>
-            <div id="chart-area" class="w-full h-[600px] bg-white p-2 rounded-lg">
-                <svg id="line-chart" width="100%" height="100%"></svg>
-            </div>
+            <div class="chart-area" class="w-full h-[600px] bg-white p-2 rounded-lg"></div>
             <p class="mt-6 text-sm text-gray-500">
-                *Data is loaded from `Processed_speeding_dataset.csv`.
-                Click on a legend item to toggle the visibility of that line.
             </p>
         </div>
     </div>
@@ -284,19 +173,24 @@
         // JavaScript function to reset the filter elements
         function resetFiltersAndChart() {
             // 1. Reset the dropdown values to their defaults
+            document.getElementById('age-filter').value = '';
             document.getElementById('jurisdiction-filter').value = 'All';
-            document.getElementById('offense-type-filter').value = 'Fines';
+            document.getElementById('location-filter').value = '';
+            document.getElementById('offense-type-filter').value = 'Fines (log)';
             document.getElementById('year-filter').value = '2024'; // Reset to 2024
             
             // 2. Dispatch a 'change' event on all relevant elements to notify the JS scripts
+            document.getElementById('age-filter').dispatchEvent(new Event('change'));
             document.getElementById('jurisdiction-filter').dispatchEvent(new Event('change'));
+            document.getElementById('location-filter').dispatchEvent(new Event('change'));
             document.getElementById('offense-type-filter').dispatchEvent(new Event('change'));
             document.getElementById('year-filter').dispatchEvent(new Event('change'));
 
             // Optional: Update the chart title immediately
-            document.getElementById('chart-title').innerText = 'Annual Fines Trend Across All Jurisdictions (2008-2024)';
+            document.getElementById('chart-title').innerText = 'Chart 1';
         }
     </script>
     <script type="module" src="./js/metrics.js"></script>
+    <script type="module" src="./js/chart1.js"></script>
 </body>
 </html>

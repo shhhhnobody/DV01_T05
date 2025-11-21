@@ -1,0 +1,117 @@
+/* BASE STYLES TO MATCH SCREENSHOT */
+body {
+    background-color: #f3f1ed; /* New light beige background */
+}
+.page-content-wrapper {
+    /* Reset wrapper styling to be closer to a full-page layout */
+    max-width: none;
+    margin: 0 auto; 
+    box-shadow: none; 
+    border-radius: 0;
+    padding: 0;
+    background-color: white; /* Main page background */
+}
+
+/* The custom styles for .navbar and .nav-links were removed here to use the external css/style.css */
+
+/* D3 Chart Specific Styles (Kept) */
+.axis path, .axis line {
+    fill: none;
+    stroke: #d1d5db;
+    shape-rendering: crispEdges;
+}
+.line {
+    fill: none;
+    stroke-width: 3px;
+}
+.tooltip {
+    position: absolute;
+    text-align: center;
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.85);
+    color: white;
+    border: 0px;
+    border-radius: 8px;
+    pointer-events: none;
+    font-size: 0.8rem;
+}
+.legend-item {
+    cursor: pointer;
+    transition: opacity 0.2s ease-in-out;
+}
+
+/* FILTER STYLES */
+.pill-filter-bar {
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+    padding-left: 1rem;
+    padding-right: 2.5rem; /* Space for the custom arrow */
+    border-radius: 9999px; 
+    font-size: 0.9rem;
+    width: auto; 
+    min-width: 150px; 
+    font-weight: 600; 
+    color: #333; 
+    border: 2px solid #396f7c !important; 
+    background-color: transparent !important; 
+    appearance: none; 
+    text-align: left; 
+    cursor: pointer;
+}
+
+/* Custom arrow for select boxes - UPDATED FOR SIZE, COLOR, AND ALIGNMENT */
+.select-wrapper {
+    position: relative;
+    display: inline-block;
+}
+.select-wrapper::after {
+    content: '⌄'; 
+    position: absolute;
+    top: 10%;
+    right: 10px;
+    /* Adjusted transform to visually center the large icon symbol better with the text */
+    transform: translateY(-40%); 
+    pointer-events: none;
+    font-size: 1.5rem; 
+    color: #004261; /* New icon color */
+}
+
+/* Reset button style update for the new position */
+#reset-filters-button {
+    background-color: #396f7c;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    box-shadow: none; 
+}
+
+/* Styling for the Key Metrics / Notes Panel */
+.key-metrics-panel {
+    min-width: 280px;
+    max-width: 300px;
+    padding: 1rem;
+    background-color: #F1F2F5; 
+}
+.metric-box {
+    background-color: #f7f7f7; 
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+    border: 1px solid #e0e0e0;
+}
+
+/* Specific styles for the two colored metric boxes */
+.metric-box.police {
+    background-color: #233d7c; /* Requested color: Dark blue */
+    color: white;
+}
+.metric-box.camera {
+    background-color: #233d7c; /* Requested color: Dark blue */
+    color: white;
+}
+.metric-box.arrests-charges {
+    background-color: #656d72; /* Requested color: Dark grey */
+    color: white; /* Requested text color: White */
+}
