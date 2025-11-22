@@ -2,10 +2,9 @@
 .line {
     fill: none;
     opacity: 0.9;
-    /* transition: 0.3s; ease-in-out; (If you want to keep the transition, you might need a JS library or more complex CSS here) */
 }
 
-/* Data Points (Dots) */
+/* Data Points */
 .dot {
     stroke: #fff;
     stroke-width: 1.5;
@@ -23,7 +22,7 @@
     stroke-opacity: 0.7;
 }
 
-/* Y-Axis Grid Lines (Added for visibility, previously set in JS) */
+/* Y-Axis Grid Lines */
 .y.axis .tick line {
     stroke: #9ca3af;
     stroke-opacity: 0.4;
@@ -32,14 +31,14 @@
 
 /* Axis Text */
 .axis text {
-    font-size: 0.875rem; /* Corresponds to text-sm */
-    fill: #4b5563; /* Corresponds to a dark gray color */
+    font-size: 0.875rem; 
+    fill: #4b5563; 
 }
 
 /* Y-Axis Label Text */
 .y-axis-label {
-    font-weight: 600; /* font-semibold */
-    font-size: 0.875rem; /* text-sm */
+    font-weight: 600; 
+    font-size: 0.875rem; 
     fill: currentColor;
 }
 
@@ -55,4 +54,114 @@
 }
 .legend-item.opacity-40 {
     opacity: 0.4;
+}
+
+body {
+    background-color: #f3f1ed; 
+}
+.page-content-wrapper {
+    max-width: none;
+    margin: 0 auto; 
+    box-shadow: none; 
+    border-radius: 0;
+    padding: 0;
+    background-color: white; /* Main page background */
+}
+
+/* D3 Chart Specific Styles */
+.axis path, .axis line {
+    fill: none;
+    stroke: #d1d5db;
+    shape-rendering: crispEdges;
+}
+.line {
+    fill: none;
+    stroke-width: 3px;
+}
+.tooltip {
+    position: absolute;
+    text-align: center;
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.95);
+    color: white;
+    border: 0px;
+    border-radius: 8px;
+    pointer-events: none;
+    font-size: 0.8rem;
+}
+.legend-item {
+    cursor: pointer;
+    transition: opacity 0.2s ease-in-out;
+}
+
+.pill-filter-bar {
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+    padding-left: 1rem;
+    padding-right: 2.5rem; 
+    border-radius: 9999px; 
+    font-size: 0.9rem;
+    width: auto; 
+    min-width: 150px; 
+    font-weight: 600; 
+    color: #333; 
+    border: 2px solid #396f7c !important; 
+    background-color: transparent !important; 
+    appearance: none; 
+    text-align: left; 
+    cursor: pointer;
+}
+
+.select-wrapper {
+    position: relative;
+    display: inline-block;
+}
+.select-wrapper::after {
+    content: '⌄'; 
+    position: absolute;
+    top: 10%;
+    right: 10px;
+    transform: translateY(-40%); 
+    pointer-events: none;
+    font-size: 1.5rem; 
+    color: #004261; 
+}
+
+/* Reset button styles */
+#reset-filters-button {
+    background-color: #396f7c;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    box-shadow: none; 
+}
+
+/* Styling for the Key Metrics / Notes Panel */
+.key-metrics-panel {
+    min-width: 280px;
+    max-width: 300px;
+    padding: 1rem;
+    background-color: #F1F2F5; 
+}
+.metric-box {
+    background-color: #f7f7f7; 
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+    border: 1px solid #e0e0e0;
+}
+
+.metric-box.police {
+    background-color: #233d7c; 
+    color: white;
+}
+.metric-box.camera {
+    background-color: #233d7c; 
+    color: white;
+}
+.metric-box.arrests-charges {
+    background-color: #656d72; 
+    color: white; 
 }
