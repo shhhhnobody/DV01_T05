@@ -22,7 +22,7 @@ const mapGroup = svg.append("g")
 
 const barGroup = svg.append("g")
     .attr("class", "bar-group")
-    .attr("transform", `translate(10, ${svgHeight - barHeight - 20})`);
+    .attr("transform", `translate(10, 10)`);
 
 const tooltip = d3.select("body")
     .append("div")
@@ -34,6 +34,19 @@ const color = d3.scaleSequential(d3.interpolateBlues);
 
 // Global holders
 let geojson, dataset;
+
+
+// Map state names to abbreviations
+const mapping = {
+    "New South Wales": "NSW",
+    "Victoria": "VIC",
+    "Queensland": "QLD",
+    "South Australia": "SA",
+    "Western Australia": "WA",
+    "Tasmania": "TAS",
+    "Northern Territory": "NT",
+    "Australian Capital Territory": "ACT"
+};
 
 // Load files
 Promise.all([
@@ -84,17 +97,6 @@ function updateAll() {
         d => d.JURISDICTION
     );
 
-    // Map state names to abbreviations
-    const mapping = {
-        "New South Wales": "NSW",
-        "Victoria": "VIC",
-        "Queensland": "QLD",
-        "South Australia": "SA",
-        "Western Australia": "WA",
-        "Tasmania": "TAS",
-        "Northern Territory": "NT",
-        "Australian Capital Territory": "ACT"
-    };
 
     geojson.features.forEach(f => {
         const abb = mapping[f.properties.STATE_NAME];
@@ -155,13 +157,56 @@ function drawMap() {
         .attr("d", path)
         .attr("stroke", "#666")
         .attr("fill", d => color(d.properties.value))
-        .on("mousemove", (event, d) => {
+        .on("mouseover", function (event, d) {
+            const jur = d.properties.value ? d.properties.STATE_NAME : null;
+            const abb = mapping[d.properties.STATE_NAME];
+
+            // Dim everything
+            svg.selectAll("path").transition().duration(150).style("opacity", 0.4);
+            barGroup.selectAll("rect").transition().duration(150).style("opacity", 0.4);
+
+            // Highlight map region
+            d3.select(this)
+                .raise()
+                .transition().duration(150)
+                .style("opacity", 1)
+                .attr("stroke", "#004261")
+                .attr("stroke-width", 2);
+
+            // Highlight matching bar (only when showing jurisdictions)
+            if (document.getElementById("jurisdiction-filter").value === "All") {
+                barGroup.selectAll("rect")
+                    .filter(b => b.category === abb)
+                    .raise()
+                    .transition().duration(150)
+                    .style("opacity", 1)
+                    .attr("stroke", "#004261")
+                    .attr("stroke-width", 2);
+            }
+
             tooltip.style("display", "block")
                 .html(`<strong>${d.properties.STATE_NAME}</strong><br>Value: ${d.properties.value}`)
-                .style("left", event.pageX + 10 + "px")
-                .style("top", event.pageY + 10 + "px");
+                .style("left", (event.pageX + 10) + "px")
+                .style("top", (event.pageY + 10) + "px");
         })
-        .on("mouseout", () => tooltip.style("display", "none"));
+        .on("mousemove", function (event) {
+            tooltip.style("left", (event.pageX + 10) + "px")
+                .style("top", (event.pageY + 10) + "px");
+        })
+        .on("mouseout", function () {
+
+            svg.selectAll("path").transition().duration(150)
+                .style("opacity", 1)
+                .attr("stroke", "#666")
+                .attr("stroke-width", 1);
+
+            barGroup.selectAll("rect").transition().duration(150)
+                .style("opacity", 1)
+                .attr("stroke", null)
+                .attr("stroke-width", null);
+
+            tooltip.style("display", "none");
+        });
 
     drawLegend();
 }
@@ -175,7 +220,7 @@ function drawLegend() {
 
     const legend = svg.append("g")
         .attr("class", "legend")
-        .attr("transform", `translate(${mapPaddingLeft}, ${svgHeight - 40})`);
+        .attr("transform", `translate(110, ${svgHeight - 80})`);
 
     const defs = svg.append("defs");
     const gradient = defs.append("linearGradient")
@@ -218,15 +263,72 @@ function drawBarChart(data) {
         .range([0, barHeight])
         .padding(0.2);
 
-    // Bars
-    barGroup.selectAll("rect")
-        .data(data)
+    // Bars - attach handlers first, then animate width
+    const bars = barGroup.selectAll("rect")
+        .data(data, d => d.category)
         .join("rect")
         .attr("x", 100)
         .attr("y", d => y(d.category))
-        .attr("width", d => x(d.value))
         .attr("height", y.bandwidth())
-        .attr("fill", "#4a90e2");
+        .attr("width", 0)                        // start at 0 for animation
+        .attr("fill", "#4a90e2")
+        .attr("data-category", d => d.category)
+        .on("mouseover", function (event, d) {
+            // read current jurisdiction filter state
+            const jurFilter = document.getElementById("jurisdiction-filter").value;
+
+            // Dim map and other bars
+            svg.selectAll("path").transition().duration(150).style("opacity", 0.4);
+            barGroup.selectAll("rect").transition().duration(150).style("opacity", 0.4);
+
+            // Highlight this bar
+            d3.select(this)
+                .raise()
+                .transition().duration(150)
+                .style("opacity", 1)
+                .attr("stroke", "#004261")
+                .attr("stroke-width", 2);
+
+            // Highlight matching state on map if bars represent jurisdictions
+            if (jurFilter === "All") {
+                mapGroup.selectAll("path")
+                    .filter(m => mapping[m.properties.STATE_NAME] === d.category)
+                    .raise()
+                    .transition().duration(150)
+                    .style("opacity", 1)
+                    .attr("stroke", "#004261")
+                    .attr("stroke-width", 2);
+            }
+
+            tooltip.style("display", "block")
+                .html(`<strong>${d.category}</strong><br>Value: ${d.value}`)
+                .style("left", (event.pageX + 10) + "px")
+                .style("top", (event.pageY + 10) + "px");
+        })
+        .on("mousemove", function (event) {
+            tooltip.style("left", (event.pageX + 10) + "px")
+                .style("top", (event.pageY + 10) + "px");
+        })
+        .on("mouseout", function () {
+            svg.selectAll("path").transition().duration(150)
+                .style("opacity", 1)
+                .attr("stroke", "#666")
+                .attr("stroke-width", 1);
+
+            barGroup.selectAll("rect").transition().duration(150)
+                .style("opacity", 1)
+                .attr("stroke", null)
+                .attr("stroke-width", null);
+
+            tooltip.style("display", "none");
+        });
+
+    // animate bars left-to-right with a staggered delay
+    bars.transition()
+        .duration(900)
+        .delay((d, i) => i * 80)
+        .ease(d3.easeCubicOut)
+        .attr("width", d => x(d.value));
 
     // Labels (categories)
     barGroup.selectAll("text.labels")
@@ -249,6 +351,10 @@ function drawBarChart(data) {
         .attr("y", d => y(d.category) + y.bandwidth() / 2)
         .attr("alignment-baseline", "middle")
         .style("font-size", "11px")
+        .style("opacity", 0)
+        .transition()
+        .delay(600)      // wait for bar animation
+        .style("opacity", 1)
         .text(d => d.value);
 }
 

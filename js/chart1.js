@@ -163,6 +163,18 @@ function updateChart(data, valueCol = "FINES_log", xBy = 'jurisdiction', jurSele
             const sumLog = nested.get(key)?.get(ageGroup) ?? 0;
             const sumFine = nestedRaw.get(key)?.get(ageGroup) ?? 0;
 
+            // Dim all rects, then highlight only the hovered rect
+            svg.selectAll("rect")
+                .transition().duration(150)
+                .style("opacity", 0.50);
+
+            d3.select(this)
+                .raise()
+                .transition().duration(150)
+                .style("opacity", 1)
+                .attr("stroke", "#004261")
+                .attr("stroke-width", 1);
+
             tooltip.transition().duration(150).style("opacity", 1);
 
             tooltip.html(`
@@ -179,6 +191,13 @@ function updateChart(data, valueCol = "FINES_log", xBy = 'jurisdiction', jurSele
                 .style("top", (event.pageY - 28) + "px");
         })
         .on("mouseout", function () {
+            // restore all rects to full opacity and remove stroke
+            svg.selectAll("rect")
+                .transition().duration(150)
+                .style("opacity", 1)
+                .attr("stroke", null)
+                .attr("stroke-width", null);
+
             tooltip.transition().duration(150).style("opacity", 0);
         });
 
