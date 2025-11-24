@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Chart 6 | Australian Speeding Offence Trends</title>
+	<link rel="stylesheet" href="css/style.css">
+	<link rel="stylesheet" href="css/chart5.css">
+	<link rel="stylesheet" href="css/chart6.css">
+	<script src="https://cdn.tailwindcss.com"></script>
+	<script src="https://d3js.org/d3.v7.min.js"></script>
+	<script>
+		tailwind.config = {
+			theme: {
+				extend: {
+					colors: {
+						'bitre-blue': '#1e3a8a',
+						'bitre-light': '#bfdbfe',
+						'bitre-accent': '#396f7c',
+						'screenshot-bg': '#f3f1ed',
+						'screenshot-dark': '#2a445b',
+						'light-gray': '#F1F2F5',
+					},
+					fontFamily: {
+						sans: ['Inter', 'sans-serif'],
+					},
+				}
+			}
+		}
+	</script>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+	</head>
+<body class="bg-screenshot-bg font-sans"> 
+    
+	<header class="navbar" style="display: flex; align-items: center;">
+		<a href="index.html">
+			<img src="./assets/logo.png" alt="Website Logo" style="height: 70px; margin-right: 50px; margin-left: 20px;">
+		</a>
+		<ul class="nav-links">
+			<li><a href="index.html">Home</a></li>
+			<li><a href="chart1.html">Chart 1</a></li>
+			<li><a href="chart2.html">Chart 2</a></li>
+			<li><a href="chart3.html">Chart 3</a></li>
+			<li><a href="chart4.html">Chart 4</a></li>
+			<li><a href="chart5.html">Chart 5</a></li>
+			<li><a href="chart6.html" class="active">Chart 6</a></li>
+		</ul>
+	</header>
+
+	<!-- Filter bar (keeps exact same IDs/classes as other pages) -->
+	<main class="flex-grow"> 
+		<div class="flex justify-center items-center py-4 bg-light-gray border-b border-gray-200 relative">
+			<div class="flex items-center space-x-4">
+                
+				<div class="select-wrapper">
+					<select id="jurisdiction-filter" class="pill-filter-bar">
+						<option value="All" selected>All Locations (Default)</option>
+						<!-- Options will be populated from dataset by js/chart6.js -->
+					</select>
+				</div>
+                
+				<div class="select-wrapper">
+					<select id="offense-type-filter" class="pill-filter-bar">
+						<!-- Options will be populated by js/chart6.js -->
+					</select>
+				</div>
+                
+				<div class="select-wrapper">
+					<select id="year-filter" class="pill-filter-bar">
+					</select>
+				</div>
+
+			</div>
+
+			<div class="absolute right-4 md:right-12">
+				<button 
+					id="reset-filters-button" 
+					onclick="resetChart6Filters()"
+				>
+					Reset
+				</button>
+			</div>
+		</div>
+
+		<div class="flex"> 
+            
+			<div class="key-metrics-panel border-r border-gray-200">
+				<h2 class="text-5xl font-bold text-gray-800 mb-2 pt-4"><span id="highest-location">...</span></h2>
+                
+				<p class="text-base font-semibold text-gray-600 mb-4 border-b pb-4">
+					Area with highest value,<br>
+					<span id="metric-year" class="text-lg font-bold">...</span>
+				</p>
+
+				<div class="flex mb-4">
+					<div class="metric-box police flex-1 mr-2 text-center">
+						<p class="text-2xl font-bold"><span id="police-fines-metric">...</span></p>
+						<p class="text-xs font-semibold">Total Fines Per 10k License Holder</p>
+					</div>
+				</div>
+
+				<div class="metric-box arrests-charges mb-6">
+					<p class="text-xl font-bold mb-1"><span id="fines-metric">...</span></p>
+					<p class="text-xs font-semibold">Highest (Per 10k License Holder)</p>
+					<hr class="my-1 border-gray-400">
+					<p class="text-xl font-bold mb-1"><span id="charges-metric">...</span></p>
+					<p class="text-xs font-semibold">Lowest (Per 10k License Holder)</p>
+					<hr class="my-1 border-gray-400">                    
+					<p class="text-xl font-bold mb-1"><span id="arrests-metric">...</span></p>
+					<p class="text-xs font-semibold">Mean (Per 10k License Holder)</p>
+				</div>
+				<h3 class="text-lg font-bold text-gray-800 mb-2 pt-4 border-t border-gray-200">Notes:</h3>
+                
+				<div class="max-h-60 overflow-y-auto pr-2">
+					<div class="space-y-3 text-sm text-gray-700">
+						<p class="font-bold text-screenshot-dark">Scope & Time Series:</p>
+						<ul>
+							<li class="list-disc ml-4">The value of fines per 10k license holder is obtained as such:</li>
+							<li ><strong>Fines per 10,000 licences = (Number of speeding fines ÷ Number of licensed drivers) × 10,000</strong></li>
+							<li class="list-disc ml-4">Using “per 10,000 licences” makes the comparison fair because each state has a different number of licensed drivers.</li>
+							<li class="list-disc ml-4">For example, NSW has millions of licence holders, while NT has fewer than 200,000 — so using raw numbers alone would be misleading.</li>
+							<li class="list-disc ml-4">This metric helps compare jurisdictions on an equal basis.This is very important for fairness, and used officially by the Australian Road Safety Data Hub (BITRE).</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+
+			<div class="flex-1 p-8 bg-white">
+				<h2 id="chart5-title" class="text-2xl font-bold text-gray-800 mb-4 transition duration-300">
+					Chart 6 — Fines by Jurisdiction (example)
+				</h2>
+				<div id="chart5-area" class="w-full bg-white p-2 rounded-lg">
+					<!-- Single chart view: the JS will render either the line or bar chart into #chart5-single -->
+					<div class="chart-card bg-white p-4 rounded border">
+						<h3 id="chart5-subtitle" class="text-sm font-semibold mb-2">Line / Bar visualization</h3>
+						<svg id="chart5-single" width="100%" height="420"></svg>
+					</div>
+				</div>
+			</div>
+		</div>
+	</main>
+
+	<footer class="footer bg-screenshot-dark text-white p-3 text-center">
+		<p>&copy; DV01_T05</p>
+		<p>Code/content generated with the assistance from GenAI</p>
+	</footer>
+
+	<script>
+		function resetChart6Filters() {
+			document.getElementById('jurisdiction-filter').value = 'All';
+			document.getElementById('offense-type-filter').value = 'LINE';
+			document.getElementById('year-filter').value = '';
+			document.getElementById('jurisdiction-filter').dispatchEvent(new Event('change'));
+			document.getElementById('offense-type-filter').dispatchEvent(new Event('change'));
+			document.getElementById('year-filter').dispatchEvent(new Event('change'));
+			document.getElementById('chart5-title').innerText = 'Chart 6 — Fines by Jurisdiction (example)';
+		}
+	</script>
+	<script type="module" src="js/chart6.js"></script>
+
+</body>
+</html>

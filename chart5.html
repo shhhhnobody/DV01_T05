@@ -60,9 +60,10 @@
                 
                 <div class="select-wrapper">
                     <select id="offense-type-filter" class="pill-filter-bar">
-                        <option value="FINE_COUNTS" selected>Fines (Default)</option>
-                        <option value="ARREST_COUNTS">Arrests</option>
+                        <option value="TOAL_OFFENCES">Total Offences (Default)</option>
+                        <option value="FINE_COUNTS">Fines</option>
                         <option value="CHARGES_COUNTS">Charges</option>
+                        <option value="ARREST_COUNTS">Arrests</option>
                     </select>
                 </div>
                 
@@ -90,10 +91,10 @@
         <div class="flex"> 
             
             <div class="key-metrics-panel border-r border-gray-200">
-                <h2 class="text-5xl font-bold text-gray-800 mb-2 pt-4"><span id="total-fines-metric">...</span></h2>
+                <h2 class="text-5xl font-bold text-gray-800 mb-2 pt-4"><span id="highest-location">...</span></h2>
                 
                 <p class="text-base font-semibold text-gray-600 mb-4 border-b pb-4">
-                    Speeding Infringements,<br>
+                    Area with highest total offences,<br>
                     <span id="metric-year" class="text-lg font-bold">...</span>
                 </p>
 
@@ -110,7 +111,7 @@
                     <hr class="my-1 border-gray-400">
                     <p class="text-xl font-bold mb-1"><span id="charges-metric">...</span></p>
                     <p class="text-xs font-semibold">Charges</p>
-                    <hr class="my-1 border-gray-400">
+                    <hr class="my-1 border-gray-400">                    
                     <p class="text-xl font-bold mb-1"><span id="arrests-metric">...</span></p>
                     <p class="text-xs font-semibold">Arrests</p>
                     
@@ -136,24 +137,10 @@
                     Annual Offences Trend
                 </h2>
                 <div id="chart5-area" class="w-full bg-white p-2 rounded-lg">
-                    <!-- Four small multiples (2x2) showing counts by LOCATION_UPDATED for selected year -->
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="chart-card bg-white p-3 rounded border">
-                            <h3 class="text-sm font-semibold mb-2">Total Offences by Location</h3>
-                            <svg id="chart5-total" width="100%" height="260"></svg>
-                        </div>
-                        <div class="chart-card bg-white p-3 rounded border">
-                            <h3 class="text-sm font-semibold mb-2">Fines by Location</h3>
-                            <svg id="chart5-fines" width="100%" height="260"></svg>
-                        </div>
-                        <div class="chart-card bg-white p-3 rounded border">
-                            <h3 class="text-sm font-semibold mb-2">Charges by Location</h3>
-                            <svg id="chart5-charges" width="100%" height="260"></svg>
-                        </div>
-                        <div class="chart-card bg-white p-3 rounded border">
-                            <h3 class="text-sm font-semibold mb-2">Arrests by Location</h3>
-                            <svg id="chart5-arrests" width="100%" height="260"></svg>
-                        </div>
+                    <!-- Single chart view: the JS renders the selected metric into #chart5-single -->
+                    <div class="chart-card bg-white p-4 rounded border">
+                        <h3 id="chart5-subtitle" class="text-sm font-semibold mb-2">Total Offences by Location</h3>
+                        <svg id="chart5-single" width="100%" height="420"></svg>
                     </div>
                 </div>
             </div>
@@ -168,7 +155,7 @@
     <script>
         function resetChart5Filters() {
             document.getElementById('jurisdiction-filter').value = 'All';
-            document.getElementById('offense-type-filter').value = 'FINE_COUNTS';
+            document.getElementById('offense-type-filter').value = 'TOAL_OFFENCES';
             document.getElementById('year-filter').value = '';
             document.getElementById('jurisdiction-filter').dispatchEvent(new Event('change'));
             document.getElementById('offense-type-filter').dispatchEvent(new Event('change'));
@@ -177,5 +164,6 @@
         }
     </script>
     <script type="module" src="js/chart5.js"></script>
+
 </body>
 </html>
