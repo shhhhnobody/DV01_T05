@@ -123,23 +123,39 @@ function updateChart(data, valueCol = "FINES_log", xBy = 'jurisdiction', jurSele
     svg.append("g")
         .call(d3.axisLeft(y));
 
+    // Add horizontal grid lines (rows) behind the chart
+    svg.append("g")
+        .attr("class", "y-grid")
+        .call(d3.axisLeft(y)
+            .tickSize(-width)
+            .tickFormat("")
+            .ticks(5)
+        )
+        .selectAll("line")
+        .attr("stroke", "#e5e7eb")
+        .attr("stroke-width", 1);
+    // remove the domain/path created by the axis for the grid
+    svg.selectAll('.y-grid path').remove();
+
     // Draw stacked bars
-    svg.selectAll("g.layer")
+    // Draw stacked bars with enter animation (grow from zero height)
+    const layers = svg.selectAll("g.layer")
         .data(stack)
         .enter()
         .append("g")
         .attr("class", "layer")
-        .attr("fill", d => color(d.key))
-        .selectAll("rect")
+        .attr("fill", d => color(d.key));
+
+    const rects = layers.selectAll("rect")
         .data(d => d)
         .enter()
         .append("rect")
         .attr("x", d => x(d.data._key))
-        .attr("y", d => y(d[1]))
-        .attr("height", d => y(d[0]) - y(d[1]))
+        // start at zero height at baseline so we can animate upwards
+        .attr("y", y(0))
+        .attr("height", 0)
         .attr("width", x.bandwidth())
         .on("mouseover", function (event, d) {
-            
             const ageGroup = d3.select(this.parentNode).datum().key;
             const key = d.data._key;
 
@@ -165,6 +181,13 @@ function updateChart(data, valueCol = "FINES_log", xBy = 'jurisdiction', jurSele
         .on("mouseout", function () {
             tooltip.transition().duration(150).style("opacity", 0);
         });
+
+    // Animate bars to their stacked heights
+    rects.transition()
+        .duration(900)
+        .delay((d, i) => i * 10)
+        .attr("y", d => y(d[1]))
+        .attr("height", d => y(d[0]) - y(d[1]));
 
     // Add legend
     const legend = svg.append("g")
