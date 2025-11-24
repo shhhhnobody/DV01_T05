@@ -3,9 +3,9 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chart 2 | Australian Speeding Offence Trends</title>
+    <title>Chart 4 | Australian Speeding Offence Trends</title>
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/chart2.css">
+    <link rel="stylesheet" href="css/chart4.css">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
@@ -39,15 +39,14 @@
 		<ul class="nav-links">
 			<li><a href="index.html">Home</a></li>
 			<li><a href="chart1.html">Chart 1</a></li>
-			<li><a href="chart2.html" class="active">Chart 2</a></li>
+			<li><a href="chart2.html">Chart 2</a></li>
 			<li><a href="chart3.html">Chart 3</a></li>
-			<li><a href="chart4.html">Chart 4</a></li>
+			<li><a href="chart4.html" class="active">Chart 4</a></li>
 			<li><a href="#">Chart 5</a></li>
 			<li><a href="#">Chart 6</a></li>
 		</ul>
 	</header>
 
-    <!-- The <main> element will now take up all available vertical space using 'flex-grow' -->
     <main class="flex-grow"> 
         <div class="flex justify-center items-center py-4 bg-light-gray border-b border-gray-200 relative">
             <div class="flex items-center space-x-4">
@@ -67,16 +66,24 @@
                 </div>
                 
                 <div class="select-wrapper">
-                    <select id="offense-type-filter" class="pill-filter-bar">
-                        <option value="Fines" selected>Fines (Default)</option>
-                        <option value="Arrests">Arrests</option>
-                        <option value="Charges">Charges</option>
+                    <select id="speeding-offence-filter" class="pill-filter-bar">
+                        <option value="FINES" selected>Fines (Default)</option>
+                        <option value="ARRESTS">Arrests</option>
+                        <option value="CHARGES">Charges</option>
                     </select>
+                </div>
+                
+                 <div class="select-wrapper">
+                    <select id="detection-method-filter" class="pill-filter-bar">
+                        <option value="All" selected>All Methods (Default)</option>
+                        <option value="Camera Issued">Camera Issued</option>
+                        <option value="Police Issued">Police Issued</option>
+                        <option value="Other">Other</option> </select>
                 </div>
                 
                 <div class="select-wrapper">
                     <select id="year-filter" class="pill-filter-bar">
-                        </select>
+                    </select>
                 </div>
 
             </div>
@@ -92,25 +99,24 @@
         </div>
 
 
-        <!-- Removed the min-h-screen class from this div -->
         <div class="flex"> 
             
             <div class="key-metrics-panel border-r border-gray-200">
                 <h2 class="text-5xl font-bold text-gray-800 mb-2 pt-4"><span id="total-fines-metric">...</span></h2>
                 
                 <p class="text-base font-semibold text-gray-600 mb-4 border-b pb-4">
-                    Speeding Infringements,<br>
-                    <span id="metric-year" class="text-lg font-bold">...</span>
-                </p>
+                Speeding Infringements,<br>
+                <span id="metric-year" class="text-lg font-bold">...</span>
+            </p>
 
                 <div class="flex mb-4">
                     <div class="metric-box police flex-1 mr-2 text-center">
                         <p class="text-2xl font-bold"><span id="police-fines-metric">...</span></p>
-                        <p class="text-xs font-semibold">Police fines</p>
+                        <p class="text-xs font-semibold">Police Fines</p>
                     </div>
                     <div class="metric-box camera flex-1 ml-2 text-center">
                         <p class="text-2xl font-bold"><span id="camera-fines-metric">...</span></p>
-                        <p class="text-xs font-semibold">Camera fines</p>
+                        <p class="text-xs font-semibold">Camera Fines</p>
                     </div>
                 </div>
 
@@ -127,8 +133,8 @@
                     <div class="space-y-3 text-sm text-gray-700">
                         <p class="font-bold text-screenshot-dark">Scope & Time Series:</p>
                         <ul>
-                            <li class="list-disc ml-4">Speeding fines include both camera-issued and police-issued detections. Police-issued fines have been consistently collected since **2017**.</li>
-                            <li class="list-disc ml-4">From **2023**, more detailed data is collected (e.g., location, age group, arrests, charges). Earlier years will show blanks or zeros for these fields.</li>
+                            <li class="list-disc ml-4">The **Detection Method** filter can switch between 'Camera Issued' and 'Police Issued' fines/offences.</li>
+                            <li class="list-disc ml-4">Police-issued fines/offences data has been consistently collected since **2017** in the dataset.</li>
                         </ul>
                         
                         <p class="font-bold text-screenshot-dark">Jurisdictional Differences:</p>
@@ -151,7 +157,7 @@
 
             <div class="flex-1 p-8 bg-white">
                 <h2 id="chart-title" class="text-2xl font-bold text-gray-800 mb-4 transition duration-300">
-                    Annual Fines Trend Across All Jurisdictions (2008-2024)
+                    Annual Fines Trend by Detection Method Across All Jurisdictions (2008-2024)
                 </h2>
                 <div id="chart-area" class="w-full h-[600px] bg-white p-2 rounded-lg">
                     <svg id="line-chart" width="100%" height="100%"></svg>
@@ -169,19 +175,21 @@
         function resetFiltersAndChart() {
             // Reset the dropdown values to their defaults
             document.getElementById('jurisdiction-filter').value = 'All';
-            document.getElementById('offense-type-filter').value = 'Fines';
-            document.getElementById('year-filter').value = '2024'; // Reset to 2024
+            document.getElementById('speeding-offence-filter').value = 'FINES'; 
+            document.getElementById('detection-method-filter').value = 'All'; 
+            document.getElementById('year-filter').value = '2024'; 
             
             // Dispatch a 'change' event on all relevant elements to notify the JS scripts
             document.getElementById('jurisdiction-filter').dispatchEvent(new Event('change'));
-            document.getElementById('offense-type-filter').dispatchEvent(new Event('change'));
+            document.getElementById('speeding-offence-filter').dispatchEvent(new Event('change'));
+            document.getElementById('detection-method-filter').dispatchEvent(new Event('change'));
             document.getElementById('year-filter').dispatchEvent(new Event('change'));
 
             // Update the chart title immediately
-            document.getElementById('chart-title').innerText = 'Annual Fines Trend Across All Jurisdictions (2008-2024)';
+            document.getElementById('chart-title').innerText = 'Annual Fines Trend by Detection Method Across All Jurisdictions (2008-2024)';
         }
     </script>
     <script type="module" src="./js/metrics.js"></script>
-    <script type="module" src="./js/chart2.js"></script>
+    <script type="module" src="./js/chart4.js"></script>
 </body>
 </html>
