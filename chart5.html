@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chart 5 | Australian Speeding Offence Trends</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/chart5.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'bitre-blue': '#1e3a8a',
+                        'bitre-light': '#bfdbfe',
+                        'bitre-accent': '#396f7c',
+                        'screenshot-bg': '#f3f1ed',
+                        'screenshot-dark': '#2a445b',
+                        'light-gray': '#F1F2F5',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    </head>
+<body class="bg-screenshot-bg font-sans"> 
+    
+    <header class="navbar" style="display: flex; align-items: center;">
+        <a href="index.html">
+            <img src="./assets/logo.png" alt="Website Logo" style="height: 70px; margin-right: 50px; margin-left: 20px;">
+        </a>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="chart1.html">Chart 1</a></li>
+            <li><a href="chart2.html">Chart 2</a></li>
+            <li><a href="chart3.html">Chart 3</a></li>
+            <li><a href="chart4.html">Chart 4</a></li>
+            <li><a href="chart5.html" class="active">Chart 5</a></li>
+            <li><a href="chart6.html">Chart 6</a></li>
+        </ul>
+    </header>
+
+    <!-- Filter bar (keeps exact same IDs/classes as other pages) -->
+    <main class="flex-grow"> 
+        <div class="flex justify-center items-center py-4 bg-light-gray border-b border-gray-200 relative">
+            <div class="flex items-center space-x-4">
+                
+                <div class="select-wrapper">
+                    <select id="jurisdiction-filter" class="pill-filter-bar">
+                        <option value="All" selected>All Locations (Default)</option>
+                        <!-- Options will be populated from dataset by js/chart5.js -->
+                    </select>
+                </div>
+                
+                <div class="select-wrapper">
+                    <select id="offense-type-filter" class="pill-filter-bar">
+                        <option value="FINE_COUNTS" selected>Fines (Default)</option>
+                        <option value="ARREST_COUNTS">Arrests</option>
+                        <option value="CHARGES_COUNTS">Charges</option>
+                    </select>
+                </div>
+                
+                <div class="select-wrapper">
+                    <select id="year-filter" class="pill-filter-bar">
+                    </select>
+                </div>
+
+            </div>
+
+            <div class="absolute right-4 md:right-12">
+                <button 
+                    id="reset-filters-button" 
+                    onclick="resetChart5Filters()"
+                >
+                    Reset
+                </button>
+            </div>
+        </div>
+
+
+        
+        
+        
+        <div class="flex"> 
+            
+            <div class="key-metrics-panel border-r border-gray-200">
+                <h2 class="text-5xl font-bold text-gray-800 mb-2 pt-4"><span id="total-fines-metric">...</span></h2>
+                
+                <p class="text-base font-semibold text-gray-600 mb-4 border-b pb-4">
+                    Speeding Infringements,<br>
+                    <span id="metric-year" class="text-lg font-bold">...</span>
+                </p>
+
+                <div class="flex mb-4">
+                    <div class="metric-box police flex-1 mr-2 text-center">
+                        <p class="text-2xl font-bold"><span id="police-fines-metric">...</span></p>
+                        <p class="text-xs font-semibold">Total Offences</p>
+                    </div>
+                </div>
+
+                <div class="metric-box arrests-charges mb-6">
+                    <p class="text-xl font-bold mb-1"><span id="fines-metric">...</span></p>
+                    <p class="text-xs font-semibold">Fines</p>
+                    <hr class="my-1 border-gray-400">
+                    <p class="text-xl font-bold mb-1"><span id="charges-metric">...</span></p>
+                    <p class="text-xs font-semibold">Charges</p>
+                    <hr class="my-1 border-gray-400">
+                    <p class="text-xl font-bold mb-1"><span id="arrests-metric">...</span></p>
+                    <p class="text-xs font-semibold">Arrests</p>
+                    
+
+                </div>
+                <h3 class="text-lg font-bold text-gray-800 mb-2 pt-4 border-t border-gray-200">Notes:</h3>
+                
+                <div class="max-h-60 overflow-y-auto pr-2">
+                    <div class="space-y-3 text-sm text-gray-700">
+                        <p class="font-bold text-screenshot-dark">Scope & Time Series:</p>
+                        <ul>
+                            <li class="list-disc ml-4">Years prior to <strong>2017</strong>(or even later) police-issued fines were not collected uniformly. This will translate data into “Unknown” entries.</li>
+                            <li class="list-disc ml-4">Interpret results from earlier years with caution. In many jurisdictions, police-issued speeding fines were not consistently collected before <strong>2017</strong>,
+                                and some states only reported camera detections. As a result, earlier years may reflect partial enforcement activity rather than total speeding offences.</li>
+                            <li class="list-disc ml-4">From <strong>2023</strong>, more detailed data is collected (e.g., location, fines, arrests, charges). Earlier years will show blanks or zeros for these fields.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex-1 p-8 bg-white">
+                <h2 id="chart5-title" class="text-2xl font-bold text-gray-800 mb-4 transition duration-300">
+                    Annual Offences Trend
+                </h2>
+                <div id="chart5-area" class="w-full bg-white p-2 rounded-lg">
+                    <!-- Four small multiples (2x2) showing counts by LOCATION_UPDATED for selected year -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="chart-card bg-white p-3 rounded border">
+                            <h3 class="text-sm font-semibold mb-2">Total Offences by Location</h3>
+                            <svg id="chart5-total" width="100%" height="260"></svg>
+                        </div>
+                        <div class="chart-card bg-white p-3 rounded border">
+                            <h3 class="text-sm font-semibold mb-2">Fines by Location</h3>
+                            <svg id="chart5-fines" width="100%" height="260"></svg>
+                        </div>
+                        <div class="chart-card bg-white p-3 rounded border">
+                            <h3 class="text-sm font-semibold mb-2">Charges by Location</h3>
+                            <svg id="chart5-charges" width="100%" height="260"></svg>
+                        </div>
+                        <div class="chart-card bg-white p-3 rounded border">
+                            <h3 class="text-sm font-semibold mb-2">Arrests by Location</h3>
+                            <svg id="chart5-arrests" width="100%" height="260"></svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer bg-screenshot-dark text-white p-3 text-center">
+        <p>&copy; DV01_T05</p>
+        <p>Code/content generated with the assistance from GenAI</p>
+    </footer>
+
+    <script>
+        function resetChart5Filters() {
+            document.getElementById('jurisdiction-filter').value = 'All';
+            document.getElementById('offense-type-filter').value = 'FINE_COUNTS';
+            document.getElementById('year-filter').value = '';
+            document.getElementById('jurisdiction-filter').dispatchEvent(new Event('change'));
+            document.getElementById('offense-type-filter').dispatchEvent(new Event('change'));
+            document.getElementById('year-filter').dispatchEvent(new Event('change'));
+            document.getElementById('chart5-title').innerText = 'Annual Offences Trend';
+        }
+    </script>
+    <script type="module" src="js/chart5.js"></script>
+</body>
+</html>
