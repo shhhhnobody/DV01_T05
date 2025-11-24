@@ -20,11 +20,25 @@ const allDetectionMethods = ['Camera Issued', 'Police Issued', 'Other'];
 // Data source path 
 const singleDataPath = './data_knime/chart4_dataset.csv'; 
 
+// Global state to track currently selected lines. 
+let activeSelections = new Set();
+let allCurrentSeriesNames = []; // To store all available series names for the current chart view
+
+// Utility to create a safe id from an arbitrary name
+function sanitizeId(name) {
+    if (name === undefined || name === null) return '';
+    return String(name).replace(/[^a-zA-Z0-9_-]/g, '_');
+}
+
 // Function to draw or update the chart
 function drawChart(offenseType, selectedJurisdiction, selectedDetectionMethod) {
     // Clear the existing chart and axis elements
     svg.selectAll('*').remove();
     d3.selectAll(".legend").remove(); 
+
+    // Reset multi-select state when filters change
+    activeSelections.clear();
+    allCurrentSeriesNames = [];
 
     const metricKey = offenseType; // e.g., 'FINES', 'ARRESTS', 'CHARGES'
     const titleCaseMetric = metricKey.charAt(0) + metricKey.slice(1).toLowerCase();
@@ -75,11 +89,6 @@ function drawChart(offenseType, selectedJurisdiction, selectedDetectionMethod) {
             filteredData = filteredData.filter(d => d.JURISDICTION === selectedJurisdiction);
         }
         
-        // Filter by Detection Method (if not 'All' AND grouping key is NOT Detection Method)
-        if (selectedDetectionMethod !== 'All' && seriesGroupingKey !== 'DETECTION_STD') {
-             filteredData = filteredData.filter(d => d.DETECTION_STD === selectedDetectionMethod);
-        }
-        
         // Filter by specific Detection Method if selected (and we are NOT grouping by Detection Method)
         if (selectedDetectionMethod !== 'All' && seriesGroupingKey === 'JURISDICTION') {
              filteredData = filteredData.filter(d => d.DETECTION_STD === selectedDetectionMethod);
@@ -111,9 +120,14 @@ function drawChart(offenseType, selectedJurisdiction, selectedDetectionMethod) {
                 name: seriesName, 
                 values: completeSeriesValues
             });
-
         });
         
+        // Filter out series that are entirely 0 or empty for cleaner legend/chart
+        series = series.filter(s => d3.sum(s.values, d => d.value) > 0);
+        
+        // Store all available series names for the current chart view
+        allCurrentSeriesNames = series.map(s => s.name);
+
         // Find maximum value for Y-scale domain
         const maxOffenseValue = d3.max(series, s => d3.max(s.values, d => d.value));
 
@@ -160,6 +174,8 @@ function drawChart(offenseType, selectedJurisdiction, selectedDetectionMethod) {
         // --- LINE GENERATOR ---
         const line = d3.line()
             .x(d => xScale(d.year))
+            // Only draw line segments where the value is greater than zero
+            .defined(d => d.value > 0)
             .y(d => yScale(d.value)); 
 
         // --- DRAW LINES ---
@@ -184,6 +200,7 @@ function drawChart(offenseType, selectedJurisdiction, selectedDetectionMethod) {
             
         // Draw Dotted Points
         seriesGroup.selectAll(".dot")
+            // Filter to include only points where value > 0
             .data(d => d.values.filter(v => v.value > 0))
             .enter().append("circle")
             .attr("class", "dot")
@@ -199,11 +216,13 @@ function drawChart(offenseType, selectedJurisdiction, selectedDetectionMethod) {
             .duration(300)
             .attr("r", 3.5); 
 
+        // NON-OVERLAPPING END LABELS
         let labels = [];
 
         series.forEach(d => {
             const lastPoint = d.values[d.values.length - 1];
-            if (lastPoint) {
+            // Only add a label if the last point has a value greater than 0
+            if (lastPoint && lastPoint.value > 0) {
                 labels.push({
                     name: d.name,
                     y: yScale(lastPoint.value), 
@@ -285,10 +304,11 @@ function drawChart(offenseType, selectedJurisdiction, selectedDetectionMethod) {
             let dataPointsFound = 0;
             
             series.forEach(s => {
-                const seriesElement = d3.select(`#series-${s.name}`);
-                const isHidden = seriesElement.empty() ? false : seriesElement.classed("hidden");
+                // Check if the line is visible, which depends on activeSelections
+                // If activeSelections is empty, all lines are visible.
+                const isLineVisible = activeSelections.size === 0 || activeSelections.has(s.name);
 
-                if (!isHidden) {
+                if (isLineVisible) {
                     totalLinesDrawn++;
                     const point = s.values.find(v => v.year === closestYear); 
                     
@@ -344,6 +364,54 @@ function drawChart(offenseType, selectedJurisdiction, selectedDetectionMethod) {
             tooltip.style("opacity", 0);
             hoverLine.style("opacity", 0);
         }
+
+        // --- Legend and Multi-Select Logic ---
+        const handleLegendClick = (event, d) => {
+            const clickedName = d.name;
+            const clickedElement = d3.select(event.currentTarget);
+
+            if (activeSelections.has(clickedName)) {
+                // If already selected, deselect it
+                activeSelections.delete(clickedName);
+                clickedElement.classed("opacity-40", false);
+            } else {
+                // If not selected, select it
+                activeSelections.add(clickedName);
+                clickedElement.classed("opacity-40", false);
+            }
+
+            // If the set of active selections is empty, all lines should be shown.
+            // Otherwise, only the selected lines should be shown.
+            const shouldShowAll = activeSelections.size === 0;
+
+            d3.selectAll(".series-group") 
+                .classed("hidden", dd => {
+                    // dd is the data bound to the .series-group (i.e., the series object)
+                    return !shouldShowAll && !activeSelections.has(dd.name);
+                });
+
+            // Update the opacity of ALL legend items based on the new state
+            d3.selectAll(".legend-item")
+                .classed("opacity-40", dd => {
+                    // dd is the data bound to the legend-item (i.e., the series object)
+                    // Dim items if NOT shouldShowAll AND NOT selected
+                    return !shouldShowAll && !activeSelections.has(dd.name);
+                });
+            
+            // Manually trigger mousemove to update the tooltip immediately
+            const overlay = d3.select(".overlay").node();
+            if (overlay) {
+                const rect = overlay.getBoundingClientRect();
+                const syntheticEvent = new MouseEvent('mousemove', {
+                    bubbles: true,
+                    cancelable: true,
+                    clientX: rect.left + rect.width / 2, 
+                    clientY: rect.top + rect.height / 2
+                });
+                overlay.dispatchEvent(syntheticEvent);
+            }
+        };
+
         
         // --- LEGEND ---
         const chartAreaWrapper = d3.select("#chart-area").node().parentNode; 
@@ -354,25 +422,8 @@ function drawChart(offenseType, selectedJurisdiction, selectedDetectionMethod) {
             .data(series)
             .enter().append("div")
             .attr("class", "legend-item flex items-center cursor-pointer")
-            .on("click", (event, d) => {
-                const isVisible = d3.select(`#series-${d.name}`).classed("hidden");
-                
-                d3.select(`#series-${d.name}`).classed("hidden", !isVisible);
-                d3.select(event.currentTarget).classed("opacity-40", !isVisible);
-                
-                const overlay = d3.select(".overlay").node();
-                if (overlay) {
-                    const rect = overlay.getBoundingClientRect();
-                    const syntheticEvent = new MouseEvent('mousemove', {
-                        bubbles: true,
-                        cancelable: true,
-                        clientX: rect.left + rect.width / 2, 
-                        clientY: rect.top + rect.height / 2
-                    });
-                    overlay.dispatchEvent(syntheticEvent);
-                }
-            })
-            .attr("id", d => `legend-${d.name}`);
+            .on("click", handleLegendClick) // Use the new multi-select handler
+            .attr("id", d => `legend-${sanitizeId(d.name)}`); // Use sanitized ID
 
         legendItems.append("span")
             .attr("class", "w-4 h-4 rounded-full mr-2 inline-block")
@@ -382,8 +433,9 @@ function drawChart(offenseType, selectedJurisdiction, selectedDetectionMethod) {
             .attr("class", "text-sm text-gray-700")
             .text(d => d.name);
 
+        // Apply sanitized IDs to the line groups for toggling
         svg.selectAll(".series-group")
-            .attr("id", d => `series-${d.name}`);
+            .attr("id", d => `series-${sanitizeId(d.name)}`);
             
         // Populate the Year filter (only needs to be done once)
         if (d3.select("#year-filter").property("options").length === 0) {
