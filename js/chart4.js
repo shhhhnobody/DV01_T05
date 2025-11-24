@@ -30,6 +30,15 @@ function sanitizeId(name) {
     return String(name).replace(/[^a-zA-Z0-9_-]/g, '_');
 }
 
+// Function to format numbers and handle null/zero values
+function formatNumber(n) { 
+    // Return '—' if value is null, undefined, or 0 (since we treat 0 as not plotted)
+    if (n === null || n === undefined || n === 0) return '—'; 
+    // Use Intl.NumberFormat for thousands separators, rounding for cleaner display
+    return new Intl.NumberFormat('en-AU').format(Math.round(n)); 
+}
+
+
 // Function to draw or update the chart
 function drawChart(offenseType, selectedJurisdiction, selectedDetectionMethod) {
     // Clear the existing chart and axis elements
@@ -260,7 +269,6 @@ function drawChart(offenseType, selectedJurisdiction, selectedDetectionMethod) {
             .style("opacity", 1);
             
         // --- TOOLTIP AND INTERACTION ---
-        const formatter = new Intl.NumberFormat('en-AU');
         let tooltip = d3.select("body").select(".tooltip");
         if (tooltip.empty()) {
             tooltip = d3.select("body").append("div")
@@ -299,43 +307,52 @@ function drawChart(offenseType, selectedJurisdiction, selectedDetectionMethod) {
             
             if (!closestYear) return mouseout();
             
-            let tooltipContent = `<div class="font-bold mb-1">${metricKey.toLowerCase()} in ${closestYear}</div>`;
-            let totalLinesDrawn = 0;
-            let dataPointsFound = 0;
-            
+            // 1. Collect all visible series data for the year
+            let items = [];
             series.forEach(s => {
-                // Check if the line is visible, which depends on activeSelections
-                // If activeSelections is empty, all lines are visible.
                 const isLineVisible = activeSelections.size === 0 || activeSelections.has(s.name);
 
                 if (isLineVisible) {
-                    totalLinesDrawn++;
-                    const point = s.values.find(v => v.year === closestYear); 
-                    
-                    if (point) {
-                        if (point.value > 0) { 
-                             dataPointsFound++; 
-                        }
-                       
-                        tooltipContent += `<div style="color: ${colorScale(s.name)};">
-                            ${s.name}: ${formatter.format(point.value)}
-                        </div>`;
-                    }
+                    const point = s.values.find(v => v.year === closestYear);
+                    // Use null if the point is missing or the value is 0
+                    const value = (point && point.value > 0) ? point.value : null;
+
+                    items.push({
+                        name: s.name, 
+                        value: value, 
+                        color: colorScale(s.name)
+                    });
                 }
             });
+
+            // 2. Sort by value (descending, with nulls/zeros at the bottom)
+            items.sort((a, b) => (b.value || 0) - (a.value || 0));
+
+            // 3. Build HTML using chart6.js's style
+            let tooltipContent = `<div style="font-weight:bold;margin-bottom:6px">${closestYear} ${metricKey.toLowerCase()}</div>`;
+            tooltipContent += '<div style="max-height:240px;overflow:auto;">';
             
-            if (totalLinesDrawn === 0) return mouseout(); 
+            items.forEach(it => {
+                const display = formatNumber(it.value);
+                
+                tooltipContent += `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px">`;
+                // Name and Color Swatch
+                tooltipContent += `<div style="display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;background:${it.color};display:inline-block;border-radius:2px"></span><span style="min-width:60px">${it.name}</span></div>`;
+                // Value (Updated color to white)
+                tooltipContent += `<div style="color:#ffffff;font-weight:600;text-align:right">${display}</div>`;
+                tooltipContent += `</div>`;
+            });
+            
+            tooltipContent += '</div>';
 
-            if (dataPointsFound === 0) {
-                 tooltipContent += `<div class="text-sm italic text-gray-400 mt-1">No data available (value is 0).</div>`;
-            }
-
+            // Update Hover Line 
             const hoverX = xScale(closestYear);
             
             hoverLine
                 .attr("x1", hoverX)
                 .attr("x2", hoverX);
 
+            // Update Tooltip Position and Content 
             const tooltipNode = tooltip.node();
             const tooltipRect = tooltipNode.getBoundingClientRect();
             const tooltipWidth = tooltipRect.width || 120; 
@@ -422,8 +439,8 @@ function drawChart(offenseType, selectedJurisdiction, selectedDetectionMethod) {
             .data(series)
             .enter().append("div")
             .attr("class", "legend-item flex items-center cursor-pointer")
-            .on("click", handleLegendClick) // Use the new multi-select handler
-            .attr("id", d => `legend-${sanitizeId(d.name)}`); // Use sanitized ID
+            .on("click", handleLegendClick) 
+            .attr("id", d => `legend-${sanitizeId(d.name)}`); 
 
         legendItems.append("span")
             .attr("class", "w-4 h-4 rounded-full mr-2 inline-block")

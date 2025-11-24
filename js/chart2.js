@@ -28,6 +28,14 @@ function sanitizeId(name) {
     return String(name).replace(/[^a-zA-Z0-9_-]/g, '_');
 }
 
+// Function to format numbers and handle null/zero values
+function formatNumber(n) { 
+    // Return '—' if value is null, undefined, or 0 (since we treat 0 as not plotted)
+    if (n === null || n === undefined || n === 0) return '—'; 
+    // Use Intl.NumberFormat for thousands separators, rounding for cleaner display
+    return new Intl.NumberFormat('en-AU').format(Math.round(n)); 
+}
+
 // Function to draw or update the chart
 function drawChart(offenseType, selectedJurisdiction) {
     // Clear the existing chart and axis elements
@@ -266,7 +274,6 @@ function drawChart(offenseType, selectedJurisdiction) {
             .style("opacity", 1);
             
         // Tooltip and Interaction Setup 
-        const formatter = new Intl.NumberFormat('en-AU');
         let tooltip = d3.select("body").select(".tooltip");
         if (tooltip.empty()) {
             tooltip = d3.select("body").append("div")
@@ -302,51 +309,52 @@ function drawChart(offenseType, selectedJurisdiction) {
 
         function mousemove(event) {
             const [xPos] = d3.pointer(event);
-            
-            // Find the closest year
             const x0 = xScale.invert(xPos); 
             const closestYear = allYears[d3.bisectCenter(allYears, x0)]; 
             
             if (!closestYear) return mouseout();
             
-            // Tooltip Content Generation 
-            const formatter = new Intl.NumberFormat('en-AU');
-            let tooltipContent = `<div class="font-bold mb-1">${offenseType} in ${closestYear}</div>`;
-            let totalLinesDrawn = 0;
-            let dataPointsFound = 0;
-            
+            // 1. Collect all visible series data for the year
+            let items = [];
             series.forEach(s => {
-                // Robustly find the DOM group for this series using data bound to ".jurisdiction"
-                const seriesElementNode = d3.selectAll(".jurisdiction").filter(dd => dd.name === s.name).node();
-                const isHidden = seriesElementNode ? d3.select(seriesElementNode).classed("hidden") : true;
-
                 // Check if the line is visible, which depends on activeSelections
-                // If activeSelections is empty, all lines are visible.
                 const isLineVisible = activeSelections.size === 0 || activeSelections.has(s.name);
 
                 if (isLineVisible) {
-                    totalLinesDrawn++;
-                    const point = s.values.find(v => v.year === closestYear); 
-                    
-                    if (point) {
-                        // CHANGED: Only count a data point if the value is > 0
-                        if (point.fines > 0) { 
-                             dataPointsFound++; 
-                        }
-                       
-                        tooltipContent += `<div style="color: ${colorScale(s.name)};">
-                            ${s.name}: ${formatter.format(point.fines)}
-                        </div>`;
-                    }
+                    const point = s.values.find(v => v.year === closestYear);
+                    // Use null if the point is missing or the value is 0
+                    const value = (point && point.fines > 0) ? point.fines : null;
+
+                    items.push({
+                        name: s.name, 
+                        value: value, 
+                        color: colorScale(s.name)
+                    });
                 }
             });
-            
-            if (totalLinesDrawn === 0) return mouseout(); 
 
-            // Only show 'No data' message if all visible lines have a value of 0.
-            if (dataPointsFound === 0) {
-                 tooltipContent += `<div class="text-sm italic text-gray-400 mt-1">No data available (value is 0).</div>`;
-            }
+            // 2. Sort by value (descending, with nulls/zeros at the bottom)
+            items.sort((a, b) => (b.value || 0) - (a.value || 0));
+
+            // 3. Build HTML with structured style
+            let tooltipContent = `<div style="font-weight:bold;margin-bottom:6px">${closestYear} ${offenseType}</div>`;
+            tooltipContent += '<div style="max-height:240px;overflow:auto;">';
+            
+            items.forEach(it => {
+                const display = formatNumber(it.value);
+                
+                tooltipContent += `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px">`;
+                // Name and Color Swatch
+                tooltipContent += `<div style="display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;background:${it.color};display:inline-block;border-radius:2px"></span><span style="min-width:60px">${it.name}</span></div>`;
+                // Value (Updated color to white)
+                tooltipContent += `<div style="color:#ffffff;font-weight:600;text-align:right">${display}</div>`;
+                tooltipContent += `</div>`;
+            });
+            
+            tooltipContent += '</div>';
+
+            // Check if any items are visible to decide if we hide the tooltip
+            if (items.length === 0) return mouseout(); 
 
             // Update Hover Line 
             const hoverX = xScale(closestYear);
