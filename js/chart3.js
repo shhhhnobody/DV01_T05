@@ -289,14 +289,27 @@ function drawLegend() {
 function drawBarChart(data) {
     barGroup.selectAll("*").remove();
 
-    // Scales
-    const x = d3.scaleLinear()
+    if (!data || data.length === 0) {
+        barGroup.append("text")
+            .attr("x", 10).attr("y", 20)
+            .text("No data available for selected filters")
+            .style("font-size", "12px").style("fill", "#666");
+        return;
+    }
+
+    // sort for readability
+    data.sort((a,b) => d3.descending(a.value, b.value));
+
+    const MIN_BAR_PX = 4;
+
+    // Scales - use sqrt to reduce skew
+    const x = d3.scaleSqrt()
         .domain([0, d3.max(data, d => d.value) || 1])
         .range([0, barWidth - 80]);
 
     const y = d3.scaleBand()
         .domain(data.map(d => d.category))
-        .range([0, barHeight])
+        .range([0, Math.max(barHeight, data.length * 22)])
         .padding(0.2);
 
     // Bars - attach handlers first, then animate width
@@ -360,7 +373,7 @@ function drawBarChart(data) {
         });
 
     // animate bars left-to-right with a staggered delay
-    bars.transition()
+    bars.transition("grow-bars")
         .duration(900)
         .delay((d, i) => i * 80)
         .ease(d3.easeCubicOut)
