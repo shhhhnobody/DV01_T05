@@ -115,3 +115,13 @@ body {
     background-color: #656d72; /* Requested color: Dark grey */
     color: white; /* Requested text color: White */
 }
+
+.metric-box.contribution {
+    background-color: #233d7c; 
+    color: white;
+}
+
+.metric-box.fines-arrests-charges {
+    background-color: #656d72; 
+    color: white; 
+}

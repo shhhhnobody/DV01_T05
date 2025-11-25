@@ -135,16 +135,23 @@
             
             <div class="max-h-40 overflow-y-auto pr-2">
                 <div class="space-y-3 text-sm text-gray-700">
-                    <p>
-                        This chart visualizes ...
-                    </p>
+                    <p class="font-bold text-screenshot-dark">Scope & Time Series:</p>
+                    <ul>
+                        <li class="list-disc ml-4">From <strong>2023</strong>, more detailed data is collected (e.g., location, age group, arrests, charges). Earlier years will show blanks or zeros for these fields.</li>
+                    </ul>
+                    
+                    <p class="font-bold text-screenshot-dark">Data Limitations:</p>
+                    <ul>
+                        <li class="list-disc ml-4"><strong>Missing data:</strong> ACT (2022) is not available, and low volumes are seen for Victoria (2024, due to Protected Industrial Action).</li>
+                        <li class="list-disc ml-4">Data is updated by each jurisdiction and may be revised over time.</li>
+                    </ul>
                 </div>
             </div>
         </div>
 
         <div class="flex-1 p-8 bg-white">
             <h2 id="chart-title" class="text-2xl font-bold text-gray-800 mb-4 transition duration-300">
-                Chart 3
+                Fines by Jurisdiction - 2024
             </h2>
             <div class="chart-area" class="w-full h-[600px] bg-white p-2 rounded-lg"></div>
             <p class="mt-6 text-sm text-gray-500">
@@ -173,7 +180,7 @@
             document.getElementById('year-filter').dispatchEvent(new Event('change'));
 
             // Optional: Update the chart title immediately
-            document.getElementById('chart-title').innerText = 'Chart 3';
+            document.getElementById('chart-title').innerText = 'Fines by Jurisdiction - 2024';
         }
     </script>
     <script type="module" src="./js/metrics.js"></script>

@@ -60,19 +60,31 @@ Promise.all([
     updateAll();
 });
 
-// Populate year dropdown
+// Populate year dropdown (idempotent)
 function populateYearDropdown() {
-    const years = [...new Set(dataset.map(d => d.YEAR))].sort();
+    const years = [...new Set(dataset.map(d => d.YEAR))].map(y => String(y).trim()).sort();
     const yearSelect = document.getElementById("year-filter");
+    if (!yearSelect) return;
 
-    years.forEach(y => {
-        const opt = document.createElement("option");
-        opt.value = y;
-        opt.textContent = y;
-        yearSelect.appendChild(opt);
-    });
+    // Only populate if empty to avoid duplicates from multiple chart scripts
+    if (yearSelect.options.length === 0) {
+        years.forEach(y => {
+            const opt = document.createElement("option");
+            opt.value = y;
+            opt.textContent = y;
+            yearSelect.appendChild(opt);
+        });
+    }
 
-    yearSelect.value = "2024";
+    // Default to the latest year available in the dataset
+    const latest = years[years.length - 1];
+    if (latest !== undefined) {
+        if (Array.from(yearSelect.options).some(o => o.value === latest)) {
+            yearSelect.value = latest;
+        } else if (yearSelect.options.length > 0) {
+            yearSelect.selectedIndex = yearSelect.options.length - 1;
+        }
+    }
 }
 
 // MAIN UPDATE
@@ -140,6 +152,30 @@ function updateAll() {
     }
 
     drawBarChart(barData);
+
+    // Determine dynamic title based on current filters
+    let titleText = "";
+
+    // Offense type (default to Fines if empty)
+    const offenseLabel = offense || "Fines";
+
+    // Case 1: All jurisdictions
+    if (jur === "All") {
+        titleText = `${offenseLabel} by Jurisdiction - ${year}`;
+    } else {
+        // Jurisdiction selected
+        if (!loc) {
+            // No location filter
+            titleText = `${offenseLabel} in ${jur} - ${year}`;
+        } else {
+            // Location filter applied
+            titleText = `${offenseLabel} in ${loc}, ${jur} - ${year}`;
+        }
+    }
+
+    // Update the HTML title
+    document.getElementById("chart-title").innerText = titleText;
+
 }
 
 // DRAW MAP
@@ -356,6 +392,10 @@ function drawBarChart(data) {
         .delay(600)      // wait for bar animation
         .style("opacity", 1)
         .text(d => d.value);
+
+    console.log("Bar data values:", data.map(d => d.value));
+    console.log("Max value:", d3.max(data, d => d.value));
+
 }
 
 // Filter listeners

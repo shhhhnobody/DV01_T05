@@ -18,12 +18,33 @@ const allJurisdictionKeys = ['ACT', 'NSW', 'NT', 'QLD', 'SA', 'TAS', 'VIC', 'WA'
 // Data source path
 const singleDataPath = './data_knime/chart2_dataset.csv';
 
+// Global state to track currently selected lines. 
+let activeSelections = new Set();
+let allCurrentSeriesNames = []; // To store all available series names for the current chart view
+
+// Utility to create a safe id from an arbitrary name
+function sanitizeId(name) {
+    if (name === undefined || name === null) return '';
+    return String(name).replace(/[^a-zA-Z0-9_-]/g, '_');
+}
+
+// Function to format numbers and handle null/zero values
+function formatNumber(n) { 
+    // Return '—' if value is null, undefined, or 0 (since we treat 0 as not plotted)
+    if (n === null || n === undefined || n === 0) return '—'; 
+    // Use Intl.NumberFormat for thousands separators, rounding for cleaner display
+    return new Intl.NumberFormat('en-AU').format(Math.round(n)); 
+}
+
 // Function to draw or update the chart
 function drawChart(offenseType, selectedJurisdiction) {
     // Clear the existing chart and axis elements
     svg.selectAll('*').remove();
     
     d3.selectAll(".legend").remove(); 
+
+    activeSelections.clear();
+    allCurrentSeriesNames = [];
 
     // Define dynamic data keys and chart title
     const metricKey = offenseType.toUpperCase(); // e.g., 'FINES', 'ARRESTS', 'CHARGES'
@@ -98,8 +119,16 @@ function drawChart(offenseType, selectedJurisdiction) {
         });
         
         if (selectedJurisdiction !== 'All') {
+            // Filter out series that are entirely 0 or empty for cleaner legend/chart
+            series = series.filter(s => d3.sum(s.values, d => d.fines) > 0);
+            chartAreas = series.map(s => s.name);
+        } else {
+            // For All view, ensure chartAreas come from the series that actually exist in the data
             chartAreas = series.map(s => s.name);
         }
+
+        // Store all available series names for the current chart view
+        allCurrentSeriesNames = series.map(s => s.name);
 
         // Find maximum value for Y-scale domain
         const maxOffenseValue = d3.max(series, s => d3.max(s.values, d => d.fines));
@@ -156,6 +185,8 @@ function drawChart(offenseType, selectedJurisdiction) {
         // Define Line Generator
         const line = d3.line()
             .x(d => xScale(d.year))
+            // ADDED: d3.defined to prevent line segments for points where fines <= 0
+            .defined(d => d.fines > 0)
             .y(d => yScale(d.fines)); 
 
         // Draw Lines
@@ -181,7 +212,7 @@ function drawChart(offenseType, selectedJurisdiction) {
             .attr("stroke-dashoffset", 0);
             
         // Draw Dotted Points
-        // Only draw dots for points where the value is > 0, to avoid clutter on the 0-line
+        // Filter d.values to include only points where v.fines > 0
         jurisdiction.selectAll(".dot")
             .data(d => d.values.filter(v => v.fines > 0))
             .enter().append("circle")
@@ -203,7 +234,8 @@ function drawChart(offenseType, selectedJurisdiction) {
 
         series.forEach(d => {
             const lastPoint = d.values[d.values.length - 1];
-            if (lastPoint) {
+            // Only add a label if the last point has a value greater than 0
+            if (lastPoint && lastPoint.fines > 0) { 
                 labels.push({
                     name: d.name,
                     y: yScale(lastPoint.fines), 
@@ -242,7 +274,6 @@ function drawChart(offenseType, selectedJurisdiction) {
             .style("opacity", 1);
             
         // Tooltip and Interaction Setup 
-        const formatter = new Intl.NumberFormat('en-AU');
         let tooltip = d3.select("body").select(".tooltip");
         if (tooltip.empty()) {
             tooltip = d3.select("body").append("div")
@@ -278,46 +309,52 @@ function drawChart(offenseType, selectedJurisdiction) {
 
         function mousemove(event) {
             const [xPos] = d3.pointer(event);
-            
-            // Find the closest year
             const x0 = xScale.invert(xPos); 
             const closestYear = allYears[d3.bisectCenter(allYears, x0)]; 
             
             if (!closestYear) return mouseout();
             
-            // Tooltip Content Generation 
-            const formatter = new Intl.NumberFormat('en-AU');
-            let tooltipContent = `<div class="font-bold mb-1">${offenseType} in ${closestYear}</div>`;
-            let totalLinesDrawn = 0;
-            let dataPointsFound = 0;
-            
+            // 1. Collect all visible series data for the year
+            let items = [];
             series.forEach(s => {
-                const seriesElement = d3.select(`#series-${s.name}`);
-                // Check if the corresponding line group has been hidden by the legend click handler
-                const isHidden = seriesElement.empty() ? false : seriesElement.classed("hidden");
+                // Check if the line is visible, which depends on activeSelections
+                const isLineVisible = activeSelections.size === 0 || activeSelections.has(s.name);
 
-                if (!isHidden) {
-                    totalLinesDrawn++;
-                    const point = s.values.find(v => v.year === closestYear); 
-                    
-                    if (point) {
-                        if (point.fines > 0) { 
-                             dataPointsFound++; 
-                        }
-                       
-                        tooltipContent += `<div style="color: ${colorScale(s.name)};">
-                            ${s.name}: ${formatter.format(point.fines)}
-                        </div>`;
-                    }
+                if (isLineVisible) {
+                    const point = s.values.find(v => v.year === closestYear);
+                    // Use null if the point is missing or the value is 0
+                    const value = (point && point.fines > 0) ? point.fines : null;
+
+                    items.push({
+                        name: s.name, 
+                        value: value, 
+                        color: colorScale(s.name)
+                    });
                 }
             });
-            
-            if (totalLinesDrawn === 0) return mouseout(); 
 
-            // Only show 'No data' message if all visible lines have a value of 0.
-            if (dataPointsFound === 0) {
-                 tooltipContent += `<div class="text-sm italic text-gray-400 mt-1">No data available (value is 0).</div>`;
-            }
+            // 2. Sort by value (descending, with nulls/zeros at the bottom)
+            items.sort((a, b) => (b.value || 0) - (a.value || 0));
+
+            // 3. Build HTML with structured style
+            let tooltipContent = `<div style="font-weight:bold;margin-bottom:6px">${closestYear} ${offenseType}</div>`;
+            tooltipContent += '<div style="max-height:240px;overflow:auto;">';
+            
+            items.forEach(it => {
+                const display = formatNumber(it.value);
+                
+                tooltipContent += `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px">`;
+                // Name and Color Swatch
+                tooltipContent += `<div style="display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;background:${it.color};display:inline-block;border-radius:2px"></span><span style="min-width:60px">${it.name}</span></div>`;
+                // Value (Updated color to white)
+                tooltipContent += `<div style="color:#ffffff;font-weight:600;text-align:right">${display}</div>`;
+                tooltipContent += `</div>`;
+            });
+            
+            tooltipContent += '</div>';
+
+            // Check if any items are visible to decide if we hide the tooltip
+            if (items.length === 0) return mouseout(); 
 
             // Update Hover Line 
             const hoverX = xScale(closestYear);
@@ -358,6 +395,54 @@ function drawChart(offenseType, selectedJurisdiction) {
             tooltip.style("opacity", 0);
             hoverLine.style("opacity", 0);
         }
+
+        // --- Legend and Multi-Select Logic ---
+        const handleLegendClick = (event, d) => {
+            const clickedName = d.name;
+            const clickedElement = d3.select(event.currentTarget);
+
+            if (activeSelections.has(clickedName)) {
+                // If already selected, deselect it
+                activeSelections.delete(clickedName);
+                clickedElement.classed("opacity-40", false);
+            } else {
+                // If not selected, select it
+                activeSelections.add(clickedName);
+                clickedElement.classed("opacity-40", false);
+            }
+
+            // If the set of active selections is empty, all lines should be shown.
+            // Otherwise, only the selected lines should be shown.
+            const shouldShowAll = activeSelections.size === 0;
+
+            d3.selectAll(".jurisdiction")
+                .classed("hidden", dd => {
+                    // dd is the data bound to the .jurisdiction group (i.e., the series object)
+                    return !shouldShowAll && !activeSelections.has(dd.name);
+                });
+
+            // Update the opacity of ALL legend items based on the new state
+            d3.selectAll(".legend-item")
+                .classed("opacity-40", dd => {
+                    // dd is the data bound to the legend-item (i.e., the series object)
+                    // Dim items if NOT shouldShowAll AND NOT selected
+                    return !shouldShowAll && !activeSelections.has(dd.name);
+                });
+            
+            // Manually trigger mousemove to update the tooltip immediately
+            const overlay = d3.select(".overlay").node();
+            if (overlay) {
+                const rect = overlay.getBoundingClientRect();
+                // Create a synthetic event at the center of the overlay for stable update
+                const syntheticEvent = new MouseEvent('mousemove', {
+                    bubbles: true,
+                    cancelable: true,
+                    clientX: rect.left + rect.width / 2, 
+                    clientY: rect.top + rect.height / 2
+                });
+                overlay.dispatchEvent(syntheticEvent);
+            }
+        };
         
         // Legend
         // Append legend to the chart's main parent container for correct positioning
@@ -369,30 +454,8 @@ function drawChart(offenseType, selectedJurisdiction) {
             .data(series)
             .enter().append("div")
             .attr("class", "legend-item flex items-center cursor-pointer")
-            .on("click", (event, d) => {
-                const isVisible = d3.select(`#series-${d.name}`).classed("hidden");
-                
-                // Toggle the visibility of the line (group)
-                d3.select(`#series-${d.name}`).classed("hidden", !isVisible);
-                
-                // Toggle the opacity of the legend item itself
-                d3.select(event.currentTarget).classed("opacity-40", !isVisible);
-                
-                // Manually trigger mousemove to update the tooltip immediately
-                const overlay = d3.select(".overlay").node();
-                if (overlay) {
-                    const rect = overlay.getBoundingClientRect();
-                    // Create a synthetic event at the center of the overlay for stable update
-                    const syntheticEvent = new MouseEvent('mousemove', {
-                        bubbles: true,
-                        cancelable: true,
-                        clientX: rect.left + rect.width / 2, 
-                        clientY: rect.top + rect.height / 2
-                    });
-                    overlay.dispatchEvent(syntheticEvent);
-                }
-            })
-            .attr("id", d => `legend-${d.name}`);
+            .on("click", handleLegendClick) // Use the new handler
+            .attr("id", d => `legend-${sanitizeId(d.name)}`);
 
         legendItems.append("span")
             .attr("class", "w-4 h-4 rounded-full mr-2 inline-block")
@@ -402,9 +465,9 @@ function drawChart(offenseType, selectedJurisdiction) {
             .attr("class", "text-sm text-gray-700")
             .text(d => d.name);
 
-        // Apply IDs to the line groups for toggling
+        // Apply sanitized IDs to the line groups for toggling (kept for debugging/accessibility)
         svg.selectAll(".jurisdiction")
-            .attr("id", d => `series-${d.name}`);
+            .attr("id", d => `series-${sanitizeId(d.name)}`);
 
     }).catch(error => {
         console.error(`Error loading or processing data from ${singleDataPath}:`, error);
@@ -427,7 +490,8 @@ function debounce(func, delay) {
 function updateChart() {
     const offenseType = d3.select("#offense-type-filter").node().value;
     const jurisdictionFilter = d3.select("#jurisdiction-filter").node();
-    const jurisdiction = jurisdictionFilter ? jurisdictionFilter.value : 'ALL';
+    // Use 'All' as the default if the filter element somehow isn't found
+    const jurisdiction = jurisdictionFilter ? jurisdictionFilter.value : 'All';
     
     drawChart(offenseType, jurisdiction);
 }
