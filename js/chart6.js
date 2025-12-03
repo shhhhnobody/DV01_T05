@@ -5,6 +5,7 @@ const lineDataPath = './data_knime/chart6.1_dataset.csv';
 const barDataPath = './data_knime/chart6_dataset.csv';
 let lineRaw = null;
 let barRaw = null;
+let hasAnimated = false; // ensure we only run build animation once
 
 console.log('chart6.js module loaded');
 if (typeof d3 === 'undefined') console.error('D3 not found: make sure d3.v7 is loaded before chart6.js');
@@ -173,6 +174,14 @@ Promise.all([
     // initial draw
     draw();
 
+    // animate immediately on load (once). Small delay ensures SVG bbox is ready.
+    if (!hasAnimated) {
+        setTimeout(() => {
+            try { animateBuild(); } catch (e) { console.warn('animateBuild failed', e); }
+            hasAnimated = true;
+        }, 80);
+    }
+
 }).catch(err => {
     console.error('chart6: failed to load CSVs', err);
     setStatus('Failed to load data (see console)');
@@ -218,16 +227,20 @@ function renderBarChart(svgSelector, series, opts = {}) {
         .attr('width', x.bandwidth())
         .attr('y', d => y(0))
         .attr('height', 0)
+        .attr('data-target-y', d => y(d.value))
+        .attr('data-target-height', d => Math.max(0, height - y(d.value)))
         .attr('fill', opts.fill || '#1f77b4');
 
-    bars.transition().duration(600).attr('y', d => y(d.value)).attr('height', d => Math.max(0, height - y(d.value)));
+    // bars start collapsed (height 0). They will animate on user click via animateBuild().
 
     g.selectAll('.label').data(series).enter().append('text')
         .attr('class','label')
         .attr('x', d => x(d.key) + x.bandwidth()/2)
-        .attr('y', d => y(d.value) - 6)
+        .attr('y', d => y(0) - 6)
+        .attr('data-target-y', d => y(d.value) - 6)
         .attr('text-anchor','middle')
         .style('font-size','11px')
+        .style('opacity', 0)
         .text(d => d.value ? formatNumber(Math.round(d.value)) : '');
 
     let tooltip = d3.select('body').select('.tooltip');
@@ -278,13 +291,23 @@ function renderLineChart(svgSelector, series, opts = {}) {
         .attr('stroke', d => color(d.id))
         .attr('stroke-width', 2);
 
+    // hide paths initially by applying stroke-dasharray / stroke-dashoffset
+    s.selectAll('.line').each(function() {
+        try {
+            const path = this;
+            const len = path.getTotalLength();
+            d3.select(path).attr('stroke-dasharray', len).attr('stroke-dashoffset', len).attr('data-pathlen', len);
+        } catch (e) { /* some SVGs might not support getTotalLength */ }
+    });
+
     // points
     s.selectAll('.point').data(d => d.values.map(v => ({ id: d.id, year: v.year, value: v.value }))).enter()
         .append('circle')
         .attr('class','point')
         .attr('cx', d => x(d.year))
         .attr('cy', d => d.value !== null ? y(d.value) : -9999)
-        .attr('r', d => d.value !== null ? 3 : 0)
+        .attr('r', 0)
+        .attr('data-target-r', d => d.value !== null ? 3 : 0)
         .attr('fill', d => color(d.id))
         .attr('opacity', 0.9);
 
@@ -341,3 +364,36 @@ function renderLineChart(svgSelector, series, opts = {}) {
             tooltip.html(html).style('left', (event.pageX + 12) + 'px').style('top', (event.pageY + 12) + 'px').style('opacity', 1);
         });
 }
+
+    // Animate the currently drawn chart from its collapsed state to final view
+    function animateBuild() {
+        const svg = d3.select('#chart5-single');
+
+        // animate bars (if present)
+        const bars = svg.selectAll('.bar');
+        if (!bars.empty()) {
+            bars.interrupt();
+            bars.transition().duration(1200).attr('y', function() { return +this.getAttribute('data-target-y'); }).attr('height', function() { return +this.getAttribute('data-target-height'); });
+
+            // labels
+            const labels = svg.selectAll('.label');
+            labels.interrupt();
+            labels.transition().duration(1200).attr('y', function() { return +this.getAttribute('data-target-y'); }).style('opacity', 1);
+        }
+
+        // animate lines and points (if present)
+        const lines = svg.selectAll('.line');
+        if (!lines.empty()) {
+            lines.interrupt();
+            lines.each(function() {
+                const path = this;
+                const len = +path.getAttribute('data-pathlen') || 0;
+                d3.select(path).transition().duration(1400).attr('stroke-dashoffset', 0);
+            });
+
+            // points pop in
+            const pts = svg.selectAll('.point');
+            pts.interrupt();
+            pts.transition().delay(300).duration(800).attr('r', function() { return +this.getAttribute('data-target-r') || 0; });
+        }
+    }

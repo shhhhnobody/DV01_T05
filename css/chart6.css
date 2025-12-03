@@ -1,0 +1,5 @@
+/* Minimal chart6 styles - reuse chart5 styles where applicable */
+.chart-legend { display:flex; gap:8px; flex-wrap:wrap; }
+.chart-legend .item { display:flex; align-items:center; gap:6px; font-size:12px; }
+.chart-legend .swatch { width:12px; height:12px; border-radius:2px; }
+.tooltip { position: absolute; pointer-events:none; background: rgba(0,0,0,0.8); color: #fff; padding:6px 8px; border-radius:4px; font-size:12px; }
