@@ -2,7 +2,7 @@
 // D3.js stacked bar chart for Chart 1
 
 // Set chart dimensions
-const margin = { top: 50, right: 110, bottom: 50, left: 60 },
+const margin = { top: 50, right: 110, bottom: 50, left: 90 },
     width = 1100 - margin.left - margin.right,
     height = 500 - margin.top - margin.bottom;
 
@@ -172,8 +172,40 @@ function updateChart(data, valueCol = "FINES_log", xBy = 'jurisdiction', jurSele
         .domain([0, d3.max(stackedData, d => ageGroups.reduce((sum, key) => sum + d[key], 0)) * 1.1])
         .range([height, 0]);
 
-    svg.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x));
-    svg.append("g").call(d3.axisLeft(y));
+    // X-axis with font sizing 
+    svg.append("g")
+        .attr("transform", `translate(0,${height})`)
+        .call(d3.axisBottom(x))
+        .selectAll("text")
+        .attr("class", "axis-text")
+        .style("font-size", "14px");
+
+    // Y-axis with font sizing
+    svg.append("g")
+        .call(d3.axisLeft(y))
+        .selectAll("text")
+        .style("font-size", "14px");
+
+    // Dynamic Y-axis label based on offense type
+    let yAxisLabel = "Fines (log) Count";
+    if (offVal === "Arrests") {
+        yAxisLabel = "Arrests Count";
+    } else if (offVal === "Charges") {
+        yAxisLabel = "Charges Count";
+    } else if (offVal === "Fines (log)" || offVal === "") {
+        yAxisLabel = "Fines (log) Count";
+    }
+
+    svg.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", -80)
+        .attr("x", 0 - (height / 2))
+        .attr("dy", "1em")
+        .style("text-anchor", "middle")
+        .style("font-size", "14px")
+        .style("font-weight", "bold")
+        .style("fill", "#4d565bff")
+        .text(yAxisLabel);
 
     // Horizontal grid lines
     svg.append("g")
