@@ -146,10 +146,16 @@
                         <li class="list-disc ml-4"><strong>Age Group:</strong>“Unknown” indicates fines/arrests/charges where the driver’s age was not recorded.</li>
                         <li class="list-disc ml-4"><strong>Location:</strong>“Unknown” indicates fines/arrests/charges where the location was not recorded.</li>
                     </ul>
+                    <p class="font-bold text-screenshot-dark">Data Transformation:</p>
+                    <ul>
+                        <li class="list-disc ml-4"><strong>Logarithmic Scale for Fines:</strong> A logarithmic transformation is applied to fine counts to reduce the impact of extreme values and improve readability.</li>
+                    </ul>
                     <p class="font-bold text-screenshot-dark">Data Limitations:</p>
                     <ul>
-                        <li class="list-disc ml-4">Some jurisdictions only have records for specific locations.</li>
-                        <li class="list-disc ml-4">If no bars appear in the chart for a given filter, it means no records exist for that combination of filters.</li>
+                        <li class="list-disc ml-4"><strong>Incomplete Location Reporting:</strong> NT, QLD, TAS, and WA did not record fine/arrests/charges counts across different locations. ACT only recorded fine/arrests/charges counts for major Australian cities. Some ACT records lack explicit location and age-group labels and are grouped under “Unknown”.</li>
+                        <li class="list-disc ml-4"><strong>Jurisdiction Coverage:</strong> All jurisdictions have records for fines. Arrests data is missing for NSW, QLD, TAS, VIC, and WA. Charges data is missing for QLD, VIC, and WA.</li>
+                        <li class="list-disc ml-4"><strong>Missing Filter Combination:</strong> If no bars appear in the chart after applying filters, it indicates that no recorded data exists for that specific combination of age group, jurisdiction, location, and offense type.</li>
+                    </ul>
                 </div>
             </div>
         </div>
