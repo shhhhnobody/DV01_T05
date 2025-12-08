@@ -32,6 +32,9 @@ const tooltip = d3.select("body")
 // Color scale
 const color = d3.scaleSequential(d3.interpolateBlues);
 
+// Number formatter to match other charts
+const formatter = new Intl.NumberFormat('en-AU');
+
 // Global holders
 let geojson, dataset;
 
@@ -388,7 +391,7 @@ function drawBarChart(data) {
         .attr("y", d => y(d.category) + y.bandwidth() / 2)
         .attr("text-anchor", "end")
         .attr("alignment-baseline", "middle")
-        .style("font-size", "11px")
+        .style("font-size", "14px")
         .text(d => d.category);
 
     // Value labels
@@ -399,12 +402,12 @@ function drawBarChart(data) {
         .attr("x", d => 100 + x(d.value) + 4)
         .attr("y", d => y(d.category) + y.bandwidth() / 2)
         .attr("alignment-baseline", "middle")
-        .style("font-size", "11px")
+        .style("font-size", "14px")
         .style("opacity", 0)
         .transition()
         .delay(600)      // wait for bar animation
         .style("opacity", 1)
-        .text(d => d.value);
+        .text(d => formatter.format(d.value));
 
     console.log("Bar data values:", data.map(d => d.value));
     console.log("Max value:", d3.max(data, d => d.value));
