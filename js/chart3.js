@@ -14,7 +14,8 @@ let mapPaddingLeft = barWidth + 40;  // shift map right
 const svg = chartArea.append("svg")
     .attr("width", svgWidth)
     .attr("height", svgHeight)
-    .style("overflow", "visible");
+    .style("overflow", "visible")
+    .style("margin-left", "40px"); 
 
 const mapGroup = svg.append("g")
     .attr("class", "map-group")
