@@ -154,13 +154,31 @@
 
     <script>
         function resetChart5Filters() {
-            document.getElementById('jurisdiction-filter').value = 'All';
-            document.getElementById('offense-type-filter').value = 'TOAL_OFFENCES';
-            document.getElementById('year-filter').value = '';
-            document.getElementById('jurisdiction-filter').dispatchEvent(new Event('change'));
-            document.getElementById('offense-type-filter').dispatchEvent(new Event('change'));
-            document.getElementById('year-filter').dispatchEvent(new Event('change'));
+            const jur = document.getElementById('jurisdiction-filter');
+            const off = document.getElementById('offense-type-filter');
+            const yr = document.getElementById('year-filter');
+            if (jur && jur.options && jur.options.length) jur.selectedIndex = 0;
+            if (off && off.options && off.options.length) off.selectedIndex = 0;
+            if (yr && yr.options && yr.options.length) yr.selectedIndex = 0;
+            const evInput = new Event('input');
+            const evChange = new Event('change');
+            if (jur) { jur.dispatchEvent(evInput); jur.dispatchEvent(evChange); }
+            if (off) { off.dispatchEvent(evInput); off.dispatchEvent(evChange); }
+            if (yr) { yr.dispatchEvent(evInput); yr.dispatchEvent(evChange); }
             document.getElementById('chart5-title').innerText = 'Annual Offences Trend';
+            // ensure the displayed metric year is updated (some browsers/styles hide select text briefly)
+            setTimeout(() => {
+                try {
+                    const yearDisplay = document.getElementById('metric-year');
+                    if (yearDisplay && yr && yr.options && yr.options.length) yearDisplay.innerText = yr.options[yr.selectedIndex].value || yr.options[0].value;
+                } catch (e) { }
+            }, 80);
+            // Fallback: force inline styles and ensure option text set so native select shows the year
+            try {
+                if (yr) { yr.style.color = '#111'; yr.style.backgroundColor = '#fff'; if (yr.options[yr.selectedIndex]) yr.options[yr.selectedIndex].text = yr.options[yr.selectedIndex].value; }
+                if (jur) { jur.style.color = '#111'; jur.style.backgroundColor = '#fff'; }
+                if (off) { off.style.color = '#111'; off.style.backgroundColor = '#fff'; }
+            } catch (e) { }
         }
     </script>
     <script type="module" src="js/chart5.js"></script>

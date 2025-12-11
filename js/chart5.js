@@ -168,6 +168,9 @@ d3.csv(dataPath, parseRow).then(data => {
         offenseSelect.node().value = 'TOAL_OFFENCES';
     }
 
+    // Hide any .select-display elements that were created (we use native selects)
+    document.querySelectorAll('.select-display').forEach(el => el.style.display = 'none');
+
     // update visible status
     try { document.getElementById('chart5-status').innerText = `Loaded ${data.length} rows`; } catch (e) {}
 

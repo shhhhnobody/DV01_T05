@@ -44,6 +44,41 @@ Promise.all([
         yearSelect.node().value = years[0] || '';
     }
 
+    // ensure visible display labels for selects (fallback for browsers that hide select text)
+    function ensureSelectDisplay(id) {
+        const sel = document.getElementById(id);
+        if (!sel) return;
+        // find wrapper
+        let wrap = sel.parentElement;
+        if (!wrap || !wrap.classList.contains('select-wrapper')) wrap = sel.parentElement;
+        let disp = wrap.querySelector('.select-display');
+        if (!disp) {
+            disp = document.createElement('span');
+            disp.className = 'select-display';
+            wrap.insertBefore(disp, sel);
+        }
+        
+        const update = () => {
+            try {
+                const opt = sel.options[sel.selectedIndex];
+                disp.innerText = opt ? opt.text : '';
+            } catch (e) {
+                disp.innerText = sel.value || '';
+            }
+        };
+        
+        update();
+        sel.addEventListener('change', update);
+        sel.addEventListener('input', update);
+    }
+
+    ensureSelectDisplay('jurisdiction-filter');
+    ensureSelectDisplay('offense-type-filter');
+    ensureSelectDisplay('year-filter');
+
+    // Hide any .select-display elements (we use native selects like chart1-4)
+    document.querySelectorAll('.select-display').forEach(el => el.style.display = 'none');
+
     // Parse line dataset: columns like "ACT+Max*(Max*(FINES PER 10K))".
     // We will extract the region name before the first '+' and build series per region.
     const lineColumns = rawLine.columns.filter(c => c !== 'YEAR');

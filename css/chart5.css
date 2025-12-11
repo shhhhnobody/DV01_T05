@@ -112,10 +112,16 @@ body {
     cursor: pointer;
 }
 
+.pill-filter-bar option {
+    color: #111;
+    background-color: #fff;
+}
+
 .select-wrapper {
     position: relative;
     display: inline-block;
 }
+
 .select-wrapper::after {
     content: '⌄'; 
     position: absolute;
