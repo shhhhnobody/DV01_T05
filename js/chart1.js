@@ -75,8 +75,8 @@ function updateMetrics(filteredData, offenseType) {
 
     updateSpan('contribution-metric', topAgeGroup);
     updateSpan('fines-metric', totalFines);     // always sum of fines
-    updateSpan('arrests-metric', totalArrests);
-    updateSpan('charges-metric', totalCharges);
+    updateSpan('total-arrests-metric', totalArrests);
+    updateSpan('total-charges-metric', totalCharges);
 }
 
 
@@ -246,11 +246,23 @@ function updateChart(data, valueCol = "FINES_log", xBy = 'jurisdiction', jurSele
                 .attr("stroke-width", 1);
 
             tooltip.transition().duration(150).style("opacity", 1);
+            
+            // Format tooltip labels based on offense type
+            let stackedLabel = offVal;
+            let sumLabel = offVal;
+            if (offVal === "Fines (log)") {
+                stackedLabel = "Fines (log) (stacked sum)";
+                sumLabel = "Original Fines (sum)";
+            } else {
+                stackedLabel = `${offVal} (stacked sum)`;
+                sumLabel = `${offVal} (sum)`;
+            }
+            
             tooltip.html(`
                 <strong>${key}</strong><br>
                 <strong>Age Group:</strong> ${ageGroup}<br>
-                <strong>${offVal} (stacked sum):</strong> ${sumStacked.toFixed(2)}<br>
-                <strong>${offVal} (sum):</strong> ${sumRaw}
+                <strong>${stackedLabel}:</strong> ${sumStacked.toFixed(2)}<br>
+                <strong>${sumLabel}:</strong> ${sumRaw}
             `)
             .style("left", (event.pageX + 15) + "px")
             .style("top", (event.pageY - 28) + "px");
@@ -268,6 +280,26 @@ function updateChart(data, valueCol = "FINES_log", xBy = 'jurisdiction', jurSele
         .delay((d, i) => i * 10)
         .attr("y", d => y(d[1]))
         .attr("height", d => y(d[0]) - y(d[1]));
+
+    // Add value labels on top of each bar (total height) with animation
+    svg.selectAll(".bar-value-label")
+        .data(stackedData)
+        .enter()
+        .append("text")
+        .attr("class", "bar-value-label")
+        .attr("x", d => x(d._key) + x.bandwidth() / 2)
+        .attr("y", d => y(0) - 5)  // start at bottom
+        .attr("text-anchor", "middle")
+        .style("font-size", "12px")
+        .style("fill", "#333")
+        .text(d => {
+            const total = ageGroups.reduce((sum, key) => sum + d[key], 0);
+            return total > 0 ? total.toFixed(2) : "";
+        })
+        .transition()
+        .duration(900)
+        .delay((d, i) => i * 10)
+        .attr("y", d => y(ageGroups.reduce((sum, key) => sum + d[key], 0)) - 5);
 
     // Legend
     const legend = svg.append("g").attr("transform", `translate(${width - 10}, 0)`);

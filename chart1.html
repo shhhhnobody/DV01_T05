@@ -79,7 +79,7 @@
 
             <div class="select-wrapper">
                 <select id="location-filter" class="pill-filter-bar">
-                    <option value="">All Location (Default)</option>
+                    <option value="">All Locations (Default)</option>
 					<option value="Inner Regional Australia">Inner Regional Australia</option>
 					<option value="Major Cities of Australia">Major Cities of Australia</option>
 					<option value="Outer Regional Australia">Outer Regional Australia</option>
@@ -131,10 +131,10 @@
                 <p class="text-xl font-bold mb-1"><span id="fines-metric">...</span></p>
                 <p class="text-xs font-semibold">Total Fines</p>
                 <hr class="my-1 border-gray-400">
-                <p class="text-xl font-bold mb-1"><span id="arrests-metric">...</span></p>
+                <p class="text-xl font-bold mb-1"><span id="total-arrests-metric">...</span></p>
                 <p class="text-xs font-semibold">Total Arrests</p>
                 <hr class="my-1 border-gray-400">
-                <p class="text-xl font-bold mb-1"><span id="charges-metric">...</span></p>
+                <p class="text-xl font-bold mb-1"><span id="total-charges-metric">...</span></p>
                 <p class="text-xs font-semibold">Total Charges</p>
             </div>
             <h3 class="text-lg font-bold text-gray-800 mb-2 pt-4 border-t border-gray-200">Notes:</h3>
@@ -154,7 +154,11 @@
                     <ul>
                         <li class="list-disc ml-4"><strong>Incomplete Location Reporting:</strong> NT, QLD, TAS, and WA did not record fine/arrests/charges counts across different locations. ACT only recorded fine/arrests/charges counts for major Australian cities. Some ACT records lack explicit location and age-group labels and are grouped under “Unknown”.</li>
                         <li class="list-disc ml-4"><strong>Jurisdiction Coverage:</strong> All jurisdictions have records for fines. Arrests data is missing for NSW, QLD, TAS, VIC, and WA. Charges data is missing for QLD, VIC, and WA.</li>
-                        <li class="list-disc ml-4"><strong>Missing Filter Combination:</strong> If no bars appear in the chart after applying filters, it indicates that no recorded data exists for that specific combination of age group, jurisdiction, location, and offense type.</li>
+                        <li class="list-disc ml-4"><strong>Missing Filter Combination:</strong> If no bars appear in the chart after applying filters, it indicates that no recorded data exists for that specific combination of age group, jurisdiction, location, and enforcement type.</li>
+                    </ul>
+                    <p class="font-bold text-screenshot-dark">Interactivity:</p>
+                    <ul>
+                        <li class="list-disc ml-4"><strong>Tooltip (Hover):</strong> Hovering the mouse over the main chart area will display a dynamic a <strong>tooltip box</strong>. The tooltip shows the exact count for the selected Enforcement Type (Fines, Arrests, or Charges) of the specific age group from specific jurisdiction or location. As fine is using log values, the tooltip also shows the original sum of fines value.</li>
                     </ul>
                 </div>
             </div>
@@ -194,7 +198,7 @@
             document.getElementById('chart-title').innerText = 'Stacked Fines (log) by Jurisdiction and Age Group';
         }
     </script>
-    <script type="module" src="./js/metrics.js"></script>
     <script type="module" src="./js/chart1.js"></script>
+    <script type="module" src="./js/metrics.js"></script>
 </body>
 </html>
