@@ -67,7 +67,7 @@
 
             <div class="select-wrapper">
                 <select id="location-filter" class="pill-filter-bar">
-                    <option value="">All Location (Default)</option>
+                    <option value="">All Locations (Default)</option>
 					<option value="Inner Regional Australia">Inner Regional Australia</option>
 					<option value="Major Cities of Australia">Major Cities of Australia</option>
 					<option value="Outer Regional Australia">Outer Regional Australia</option>
@@ -139,13 +139,28 @@
                     <ul>
                         <li class="list-disc ml-4">From <strong>2023</strong>, more detailed data is collected (e.g., location, age group, arrests, charges). Earlier years will show blanks or zeros for these fields.</li>
                     </ul>
-                    
+                    <p class="font-bold text-screenshot-dark">Jurisdictional Differences:</p>
+                    <ul>
+                        <li class="list-disc ml-4"><strong>NSW:</strong> Excludes some red-light/speed offences before 2019; speed bands changed in 2009.</li>
+                        <li class="list-disc ml-4"><strong>QLD:</strong> Only counts detections confirmed by the Traffic Camera Office.</li>
+                        <li class="list-disc ml-4"><strong>TAS:</strong> Had equipment and software issues affecting detections in several years.</li>
+                        <li class="list-disc ml-4"><strong>WA:</strong> Detection modes include On-The-Spot (OTS), mobile, fixed, and average-speed cameras.</li>
+                    </ul>
+                    <p class="font-bold text-screenshot-dark">Unknown Values:</p>
+                    <ul>
+                        <li class="list-disc ml-4"><strong>Location:</strong>“Unknown” indicates fines/arrests/charges where the location was not recorded.</li>
+                    </ul>
                     <p class="font-bold text-screenshot-dark">Data Limitations:</p>
                     <ul>
                         <li class="list-disc ml-4"><strong>Missing data:</strong> ACT (2022) is not available, and low volumes are seen for Victoria (2024, due to Protected Industrial Action).</li>
                         <li class="list-disc ml-4"><strong>Incomplete Location Reporting:</strong> NT, QLD, TAS, and WA did not record fine/arrests/charges counts across different locations. ACT only recorded fine/arrests/charges counts for major Australian cities. Some ACT records lack explicit location and age-group labels and are grouped under “Unknown”.</li>
                         <li class="list-disc ml-4"><strong>Jurisdiction Coverage:</strong> All jurisdictions have records for fines. Arrests data is missing for NSW, QLD, TAS, VIC, and WA. Charges data is missing for QLD, VIC, and WA.</li>
                         <li class="list-disc ml-4">Data is updated by each jurisdiction and may be revised over time.</li>
+                    </ul>
+                    <p class="font-bold text-screenshot-dark">Interactivity:</p>
+                    <ul>
+                        <li class="list-disc ml-4"><strong>Tooltip (Hover):</strong> Hovering the mouse over the main chart area will display a dynamic a <strong>tooltip box</strong>. The tooltip shows the exact count for the selected Enforcement Type (Fines, Arrests, or Charges).</li>
+                        <li class="list-disc ml-4"><strong>Highlight (Hover):</strong> Hovering the mouse over the main chart area will <strong>highlight the corresponding location</strong> across the bar chart and choropleth map, ensuring linked visual feedback.</li>
                     </ul>
                 </div>
             </div>
