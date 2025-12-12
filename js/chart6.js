@@ -18,6 +18,8 @@ function parseBarRow(d) {
     return {
         YEAR: +d.YEAR,
         JURISDICTION: d.JURISDICTION,
+        // Locate the column that mentions 'FINES' (case-insensitive) and parse it.
+        // Keeps parsing defensive to tolerate slightly varying column headers.
         VALUE: +(d[Object.keys(d).find(k => k.toUpperCase().includes('FINES'))] || 0)
     };
 }
@@ -45,6 +47,9 @@ Promise.all([
     }
 
     // ensure visible display labels for selects (fallback for browsers that hide select text)
+    // This function creates a small `.select-display` element inside the select
+    // wrapper and mirrors the selected option text. The project prefers native
+    // selects, so these display elements are hidden later once populated.
     function ensureSelectDisplay(id) {
         const sel = document.getElementById(id);
         if (!sel) return;
@@ -76,7 +81,8 @@ Promise.all([
     ensureSelectDisplay('offense-type-filter');
     ensureSelectDisplay('year-filter');
 
-    // Hide any .select-display elements (we use native selects like chart1-4)
+    // Hide any .select-display elements after creation — prefer the native
+    // select rendering where possible to avoid duplicate visual text overlays.
     document.querySelectorAll('.select-display').forEach(el => el.style.display = 'none');
 
     // Parse line dataset: columns like "ACT+Max*(Max*(FINES PER 10K))".
@@ -107,11 +113,12 @@ Promise.all([
         offSelect.node().value = 'LINE';
     }
 
-    // Build line series structure
-    // series = [{ id: 'ACT', values: [{year:2010, value: 4171.64}, ...] }, ...]
+    // Build line series structure: [{ id: 'ACT', values: [{year:2010, value: 4171.64}, ...] }, ...]
+    // Note: some CSV cells may be empty or non-numeric. Coerce to NaN, then
+    // replace NaN with null so `line.defined()` will skip missing points.
     const series = regions.map(r => ({ id: r.name, rawKey: r.raw, values: lineRaw.map(row => ({ year: +row.YEAR, value: +(row[r.raw] || '') ? +row[r.raw] : NaN })) }));
 
-    // clean values: replace NaN with null so they won't plot
+    // clean values: replace NaN with null so they won't plot (line.defined will skip)
     series.forEach(s => s.values.forEach(v => { if (Number.isNaN(v.value)) v.value = null; }));
 
     // draw initial view
@@ -216,6 +223,10 @@ Promise.all([
 });
 
 // Render helpers
+// Render helpers
+// Each renderer clears the SVG and draws either a helpful message or the
+// requested chart. Animations (stroke-dashoffset for lines, transitions for
+// bars/points) are applied to make redraws feel responsive.
 function renderNoData() {
     const svg = d3.select('#chart5-single');
     svg.selectAll('*').remove();

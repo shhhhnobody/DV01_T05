@@ -13,6 +13,7 @@ function parseRow(d) {
         FINE_COUNTS: +d.FINE_COUNTS || 0,
         ARREST_COUNTS: +d.ARREST_COUNTS || 0,
         CHARGES_COUNTS: +d.CHARGES_COUNTS || 0,
+        // Keep the CSV column name as-is: TOAL_OFFENCES
         TOAL_OFFENCES: +d.TOAL_OFFENCES || 0
     };
 }
@@ -21,6 +22,8 @@ function formatNumber(n) { return new Intl.NumberFormat('en-AU').format(n); }
 
 function renderBarChart(svgSelector, series, opts = {}) {
     const svg = d3.select(svgSelector);
+    // Fully clear the SVG on each call and redraw. This keeps the implementation
+    // straightforward and avoids complex enter/update/exit logic for small data.
     svg.selectAll('*').remove();
 
     if (!series || !series.length) {
@@ -61,6 +64,7 @@ function renderBarChart(svgSelector, series, opts = {}) {
         .selectAll('text').attr('transform', 'rotate(-30)').style('text-anchor', 'end');
     g.append('g').call(yAxis);
 
+    // Bars are appended and animated from height=0 to their computed height.
     const bars = g.selectAll('.bar').data(series).enter().append('rect')
         .attr('class', 'bar')
         .attr('x', d => x(d.key))
@@ -69,6 +73,7 @@ function renderBarChart(svgSelector, series, opts = {}) {
         .attr('height', 0)
         .attr('fill', opts.fill || '#1f77b4');
 
+    // Animate bars on render (used for initial load and subsequent redraws).
     bars.transition().duration(600).attr('y', d => y(d.value)).attr('height', d => Math.max(0, height - y(d.value)));
 
     g.selectAll('.label').data(series).enter().append('text')
@@ -79,6 +84,7 @@ function renderBarChart(svgSelector, series, opts = {}) {
         .style('font-size', '11px')
         .text(d => d.value > 0 ? formatNumber(d.value) : '');
 
+    // Simple shared tooltip element appended to <body> when first needed.
     let tooltip = d3.select('body').select('.tooltip');
     if (tooltip.empty()) tooltip = d3.select('body').append('div').attr('class', 'tooltip').style('opacity', 0);
 
@@ -98,14 +104,14 @@ function buildSeriesForYear(data, metric, year, locationFilter) {
 function drawSingleChart(year, metricKey = 'TOAL_OFFENCES', locationFilter = 'All') {
     if (!rawData) return;
     const labels = {
-        'TOAL_OFFENCES': 'Total Offences',
+        'TOAL_OFFENCES': 'Total Enforcements',
         'FINE_COUNTS': 'Fines',
         'CHARGES_COUNTS': 'Charges',
         'ARREST_COUNTS': 'Arrests'
     };
 
     const series = buildSeriesForYear(rawData, metricKey, year, locationFilter);
-    const colorMap = { 'TOAL_OFFENCES': '#9467bd', 'FINE_COUNTS': '#1f77b4', 'CHARGES_COUNTS': '#ff7f0e', 'ARREST_COUNTS': '#2ca02c' };
+    const colorMap = { 'TOAL_OFFENCES': '#6789bdff', 'FINE_COUNTS': '#1f77b4', 'CHARGES_COUNTS': '#ff7f0e', 'ARREST_COUNTS': '#2ca02c' };
 
     try {
         renderBarChart('#chart5-single', series, { fill: colorMap[metricKey] || '#1f77b4' });
@@ -161,15 +167,12 @@ d3.csv(dataPath, parseRow).then(data => {
     const offenseSelect = d3.select('#offense-type-filter');
     if (!offenseSelect.empty()) {
         offenseSelect.selectAll('option').remove();
-        offenseSelect.append('option').attr('value','TOAL_OFFENCES').text('Total Offences');
+        offenseSelect.append('option').attr('value','TOAL_OFFENCES').text('Total Enforcements');
         offenseSelect.append('option').attr('value','FINE_COUNTS').text('Fines');
         offenseSelect.append('option').attr('value','CHARGES_COUNTS').text('Charges');
         offenseSelect.append('option').attr('value','ARREST_COUNTS').text('Arrests');
         offenseSelect.node().value = 'TOAL_OFFENCES';
     }
-
-    // Hide any .select-display elements that were created (we use native selects)
-    document.querySelectorAll('.select-display').forEach(el => el.style.display = 'none');
 
     // update visible status
     try { document.getElementById('chart5-status').innerText = `Loaded ${data.length} rows`; } catch (e) {}

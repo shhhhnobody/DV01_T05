@@ -3,7 +3,12 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Chart 6 | Australian Speeding Offence Trends</title>
+	    <!-- Chart 6: Alternate view showing fines per 10k license holders as a
+		    multi-series line chart or as a jurisdictional bar chart. Filters are
+		    populated by `js/chart6.js`. Note: some wording uses 'Offence' while
+		    UI display text elsewhere may use 'Enforcement' — these are display
+		    strings and can be standardized separately. -->
+	    <title>Chart 6 | Australian Speeding Offence Trends</title>
 	<link rel="stylesheet" href="css/style.css">
 	<link rel="stylesheet" href="css/chart5.css">
 	<link rel="stylesheet" href="css/chart6.css">
@@ -54,7 +59,7 @@
                 
 				<div class="select-wrapper">
 					<select id="jurisdiction-filter" class="pill-filter-bar">
-						<option value="All" selected>All Locations (Default)</option>
+						<option value="All" selected>All Jurisdictions(Default)</option>
 						<!-- Options will be populated from dataset by js/chart6.js -->
 					</select>
 				</div>
@@ -73,6 +78,11 @@
 			</div>
 
 			<div class="absolute right-4 md:right-12">
+				<!-- Reset button restores filters to their initial defaults. The
+					 handler below dispatches input/change events and applies a
+					 short timeout and inline style fallback to ensure the
+					 displayed year text updates in browsers with inconsistent
+					 select rendering. -->
 				<button 
 					id="reset-filters-button" 
 					onclick="resetChart6Filters()"
@@ -146,6 +156,9 @@
 	</footer>
 
 	<script>
+		// Reset the Chart 6 filter controls to the page defaults and notify
+		// the controls (via 'input'/'change' events) so the chart redraws.
+		// Includes small cross-browser fallbacks to force option text to render.
 		function resetChart6Filters() {
 			// Reset filters to the same defaults used on load and trigger redraw
 			const jur = document.getElementById('jurisdiction-filter');

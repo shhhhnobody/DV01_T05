@@ -3,7 +3,11 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chart 5 | Australian Speeding Offence Trends</title>
+        <!-- Chart 5: Single view for location-based metrics (bar chart). Filters
+            are populated by `js/chart5.js`. Reset logic below sets selects back to
+            their initial values and includes fallbacks for browsers that briefly
+            hide select text. -->
+        <title>Chart 5 | Australian Speeding enforcement Trends</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/chart5.css">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -59,8 +63,12 @@
                 </div>
                 
                 <div class="select-wrapper">
+                    <!-- Options are overwritten on load by js/chart5.js. Note: the
+                         hardcoded option value here (TOAL_enforcementS) differs from
+                         the CSV key `TOAL_OFFENCES` used by the parser; the runtime
+                         code sets the correct default after loading the CSV. -->
                     <select id="offense-type-filter" class="pill-filter-bar">
-                        <option value="TOAL_OFFENCES">Total Offences (Default)</option>
+                        <option value="TOAL_enforcementS">Total enforcements (Default)</option>
                         <option value="FINE_COUNTS">Fines</option>
                         <option value="CHARGES_COUNTS">Charges</option>
                         <option value="ARREST_COUNTS">Arrests</option>
@@ -94,14 +102,14 @@
                 <h2 class="text-5xl font-bold text-gray-800 mb-2 pt-4"><span id="highest-location">...</span></h2>
                 
                 <p class="text-base font-semibold text-gray-600 mb-4 border-b pb-4">
-                    Area with highest total offences,<br>
+                    Area with highest total enforcements,<br>
                     <span id="metric-year" class="text-lg font-bold">...</span>
                 </p>
 
                 <div class="flex mb-4">
                     <div class="metric-box police flex-1 mr-2 text-center">
                         <p class="text-2xl font-bold"><span id="police-fines-metric">...</span></p>
-                        <p class="text-xs font-semibold">Total Offences</p>
+                        <p class="text-xs font-semibold">Total enforcements</p>
                     </div>
                 </div>
 
@@ -125,7 +133,7 @@
                         <ul>
                             <li class="list-disc ml-4">Years prior to <strong>2017</strong>(or even later) police-issued fines were not collected uniformly. This will translate data into “Unknown” entries.</li>
                             <li class="list-disc ml-4">Interpret results from earlier years with caution. In many jurisdictions, police-issued speeding fines were not consistently collected before <strong>2017</strong>,
-                                and some states only reported camera detections. As a result, earlier years may reflect partial enforcement activity rather than total speeding offences.</li>
+                                and some states only reported camera detections. As a result, earlier years may reflect partial enforcement activity rather than total speeding enforcements.</li>
                             <li class="list-disc ml-4">From <strong>2023</strong>, more detailed data is collected (e.g., location, fines, arrests, charges). Earlier years will show blanks or zeros for these fields.</li>
                         </ul>
                     </div>
@@ -134,12 +142,12 @@
 
             <div class="flex-1 p-8 bg-white">
                 <h2 id="chart5-title" class="text-2xl font-bold text-gray-800 mb-4 transition duration-300">
-                    Annual Offences Trend
+                    Annual enforcements Trend
                 </h2>
                 <div id="chart5-area" class="w-full bg-white p-2 rounded-lg">
                     <!-- Single chart view: the JS renders the selected metric into #chart5-single -->
                     <div class="chart-card bg-white p-4 rounded border">
-                        <h3 id="chart5-subtitle" class="text-sm font-semibold mb-2">Total Offences by Location</h3>
+                        <h3 id="chart5-subtitle" class="text-sm font-semibold mb-2">Total enforcements by Location</h3>
                         <svg id="chart5-single" width="100%" height="420"></svg>
                     </div>
                 </div>
@@ -153,6 +161,10 @@
     </footer>
 
     <script>
+        // Reset the Chart 5 filter controls to their defaults and trigger
+        // input/change events so the chart redraw logic executes. Includes a
+        // short timeout and inline-style fallbacks in case a browser briefly
+        // hides the selected option text.
         function resetChart5Filters() {
             const jur = document.getElementById('jurisdiction-filter');
             const off = document.getElementById('offense-type-filter');
@@ -165,7 +177,7 @@
             if (jur) { jur.dispatchEvent(evInput); jur.dispatchEvent(evChange); }
             if (off) { off.dispatchEvent(evInput); off.dispatchEvent(evChange); }
             if (yr) { yr.dispatchEvent(evInput); yr.dispatchEvent(evChange); }
-            document.getElementById('chart5-title').innerText = 'Annual Offences Trend';
+            document.getElementById('chart5-title').innerText = 'Annual enforcements Trend';
             // ensure the displayed metric year is updated (some browsers/styles hide select text briefly)
             setTimeout(() => {
                 try {

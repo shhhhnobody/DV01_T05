@@ -1,5 +1,6 @@
-// Handles updating the left-side small metrics panel for Chart 5
-// change all the values in updateSmallMetrics() into your own variables :)
+// Handles updating the left-side small metrics panel for Chart 5.
+// Single exported function to compute totals and write to a small set of DOM
+// elements. This keeps metric calculations centralized and easy to reuse.
 export function updateSmallMetrics(finesSeries, arrestsSeries, chargesSeries, totalSeries, formatNumber) {
 
     // Safety check
@@ -12,6 +13,8 @@ export function updateSmallMetrics(finesSeries, arrestsSeries, chargesSeries, to
     const totalFines = d3.sum(finesSeries, d => d.value);
     const totalArrests = d3.sum(arrestsSeries, d => d.value);
     const totalCharges = d3.sum(chargesSeries, d => d.value);
+    // Note: variable name retains 'totalOffences' to match existing UI/CSV
+    // terminology in code; display text can be updated elsewhere to 'enforcements'.
     const totalOffences = d3.sum(totalSeries, d => d.value);
 
     // Update "Total Fines" (big number on top)
