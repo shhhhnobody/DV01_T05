@@ -33,6 +33,7 @@
 </head>
 <body class="bg-screenshot-bg font-sans"> 
     
+    <!-- Navigation Bar -->
     <header class="navbar" style="display: flex; align-items: center;">
         <a href="index.html">
             <img src="./assets/logo.png" alt="Website Logo" style="height: 70px; margin-right: 50px; margin-left: 20px;">
@@ -48,6 +49,7 @@
 		</ul>
 	</header>
 
+    <!-- Filters Section -->
     <div class="flex justify-center items-center py-4 bg-light-gray border-b border-gray-200 relative">
         <div class="flex items-center space-x-4">
 
@@ -99,6 +101,7 @@
 
         </div>
 
+        <!-- Reset Button -->
         <div class="absolute right-4 md:right-12">
             <button 
                 id="reset-filters-button" 
@@ -110,6 +113,7 @@
     </div>
 
 
+    <!-- Metrics Panel Section -->
     <div class="flex min-h-screen">
         
         <div class="key-metrics-panel border-r border-gray-200">
@@ -137,6 +141,8 @@
                 <p class="text-xl font-bold mb-1"><span id="total-charges-metric">...</span></p>
                 <p class="text-xs font-semibold">Total Charges</p>
             </div>
+
+            <!-- Notes Section-->
             <h3 class="text-lg font-bold text-gray-800 mb-2 pt-4 border-t border-gray-200">Notes:</h3>
             
             <div class="max-h-40 overflow-y-auto pr-2">
@@ -164,21 +170,26 @@
             </div>
         </div>
 
+        <!-- Visualisation Section -->
         <div class="flex-1 p-8 bg-white">
+            <!-- Chart Title-->
             <h2 id="chart-title" class="text-2xl font-bold text-gray-800 mb-4 transition duration-300">
                 Stacked Fines (log) by Jurisdiction and Age Group
             </h2>
+            <!-- Chart Rendering Area -->
             <div class="chart-area" class="w-full h-[600px] bg-white p-2 rounded-lg"></div>
             <p class="mt-6 text-sm text-gray-500">
             </p>
         </div>
     </div>
 
+    <!-- Footer Section -->
 	<footer class="footer bg-screenshot-dark text-white p-3 text-center">
 		<p>&copy; DV01_T05</p>
         <p>Code/content generated with the assistance from GenAI</p>
 	</footer>
 
+    <!-- Script for Reset Button Function-->
     <script>
         // JavaScript function to reset the filter elements
         function resetFiltersAndChart() {
@@ -198,7 +209,7 @@
             document.getElementById('chart-title').innerText = 'Stacked Fines (log) by Jurisdiction and Age Group';
         }
     </script>
-    <script type="module" src="./js/chart1.js"></script>
-    <script type="module" src="./js/metrics.js"></script>
+    <script type="module" src="./js/chart1.js"></script> <!-- Script for chart rendering -->
+    <script type="module" src="./js/metrics.js"></script> <!-- Script for metrics panel data fetch -->
 </body>
 </html>

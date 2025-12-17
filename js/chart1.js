@@ -6,7 +6,7 @@ const margin = { top: 50, right: 110, bottom: 50, left: 90 },
     width = 1100 - margin.left - margin.right,
     height = 500 - margin.top - margin.bottom;
 
-// Append SVG
+// Append SVG container
 const svg = d3.select(".chart-area")
     .append("svg")
     .attr("width", width + margin.left + margin.right)
@@ -46,7 +46,7 @@ function updateMetrics(filteredData, offenseType) {
         const charges = +d.CHARGES || 0;
         const age = d.AGE_GROUP || "Unknown";
 
-        // Total fines always from **full dataset**, not filtered by age
+        // Total fines always from full dataset, not filtered by age
         totalFines += fines;
 
         // Arrests and charges are filtered sums
@@ -56,6 +56,7 @@ function updateMetrics(filteredData, offenseType) {
         // Track sum by age group for contribution metric
         if (!ageGroupTotals[age]) ageGroupTotals[age] = 0;
 
+        //  Sum values based on selected offense type
         if (offenseType === "Fines (log)" || offenseType === "Fines") {
             ageGroupTotals[age] += fines;
         } else if (offenseType === "Arrests") {
@@ -65,14 +66,17 @@ function updateMetrics(filteredData, offenseType) {
         }
     });
 
+    // Determine age group with highest contribution
     const topAgeGroup = Object.entries(ageGroupTotals)
         .sort((a, b) => b[1] - a[1])[0]?.[0] || "N/A";
 
+    // Update metric spans
     const updateSpan = (id, value) => {
         const el = document.getElementById(id);
         if (el) el.textContent = typeof value === "number" ? formatter.format(value) : value;
     };
 
+    // Update the spans in the metrics panel
     updateSpan('contribution-metric', topAgeGroup);
     updateSpan('fines-metric', totalFines);     // always sum of fines
     updateSpan('total-arrests-metric', totalArrests);
@@ -154,9 +158,11 @@ function updateChart(data, valueCol = "FINES_log", xBy = 'jurisdiction', jurSele
         d => d.AGE_GROUP
     );
 
+    // Define x-axis categories and age groups
     const keys = Array.from(nested.keys());
     const ageGroups = ["0-16", "17-25", "26-39", "40-64", "65 and over", "Unknown"];
 
+    // Construct data for stacking
     const stackedData = keys.map(k => {
         const obj = { _key: k };
         ageGroups.forEach(age => {
@@ -165,8 +171,10 @@ function updateChart(data, valueCol = "FINES_log", xBy = 'jurisdiction', jurSele
         return obj;
     });
 
+    // Create stack generator
     const stack = d3.stack().keys(ageGroups)(stackedData);
 
+    // Scales
     const x = d3.scaleBand().domain(keys).range([0, width]).padding(0.2);
     const y = d3.scaleLinear()
         .domain([0, d3.max(stackedData, d => ageGroups.reduce((sum, key) => sum + d[key], 0)) * 1.1])
@@ -230,6 +238,8 @@ function updateChart(data, valueCol = "FINES_log", xBy = 'jurisdiction', jurSele
         .attr("y", y(0))
         .attr("height", 0)
         .attr("width", x.bandwidth())
+
+        // Tooltip interactions
         .on("mouseover", function (event, d) {
             const ageGroup = d3.select(this.parentNode).datum().key;
             const key = d.data._key;
@@ -275,6 +285,7 @@ function updateChart(data, valueCol = "FINES_log", xBy = 'jurisdiction', jurSele
             tooltip.transition().duration(150).style("opacity", 0);
         });
 
+    // Animate bars
     rects.transition()
         .duration(900)
         .delay((d, i) => i * 10)

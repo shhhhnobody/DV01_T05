@@ -197,6 +197,8 @@ function drawMap() {
         .attr("d", path)
         .attr("stroke", "#666")
         .attr("fill", d => color(d.properties.value))
+
+        // Tooltip interactions
         .on("mouseover", function (event, d) {
             const jur = d.properties.value ? d.properties.STATE_NAME : null;
             const abb = mapping[d.properties.STATE_NAME];
@@ -326,6 +328,7 @@ function drawBarChart(data) {
         .attr("width", 0)                        // start at 0 for animation
         .attr("fill", "#4a90e2")
         .attr("data-category", d => d.category)
+        // Tooltip interactions
         .on("mouseover", function (event, d) {
             // read current jurisdiction filter state
             const jurFilter = document.getElementById("jurisdiction-filter").value;
